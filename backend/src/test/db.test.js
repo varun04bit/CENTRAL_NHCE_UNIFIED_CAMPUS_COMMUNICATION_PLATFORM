@@ -1,16 +1,12 @@
-const prisma = require("../config/db");
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 
-async function testDB() {
-  try {
-    const programs = await prisma.program.findMany();
-    console.log("✅ Database connected successfully");
-    console.log(programs);
-  } catch (error) {
-    console.error("❌ Database connection failed");
-    console.error(error);
-  } finally {
-    await prisma.$disconnect();
-  }
+async function test() {
+  const programs = await prisma.program.findMany({
+    include: { departments: true },
+  });
+
+  console.log(JSON.stringify(programs, null, 2));
 }
 
-testDB();
+test();
