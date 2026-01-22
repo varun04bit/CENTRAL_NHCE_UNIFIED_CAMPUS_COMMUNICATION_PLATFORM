@@ -4,8 +4,6 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
-
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -17,45 +15,105 @@ datasource db {
 // =========================
 // ENUMS
 // =========================
-enum Role {
-  ADMIN
-  STUDENT
-}
 
-enum AnnouncementCategory {
-  ACADEMIC
-  EXAM
-  EVENT
-  GENERAL
-  EMERGENCY
+enum Priority {
+  PINNED
+  HIGH
+  INFO
 }
 
 // =========================
-// MODELS
+// CORE MASTER TABLES
 // =========================
-model User {
+
+model Program {
   id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  role      Role
+  name      String   @unique // BE, BBA, BCOM, MBA, MCOM, MTECH
   createdAt DateTime @default(now())
 
+  // Useful for dropdowns & dashboards
+  departments   Department[]
+  announcements Announcement[]
+  students      Student[]
+}
+
+model Department {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  programId String
+  program   Program @relation(fields: [programId], references: [id])
+
+  // Useful for department-level views
+  faculties     Faculty[]
+  announcements Announcement[]
+  students      Student[]
+
+  @@unique([name, programId])
+}
+
+// =========================
+// USERS
+// =========================
+
+model Faculty {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  password     String
+  createdAt    DateTime @default(now())
+  isFirstLogin Boolean  @default(true)
+  updatedAt    DateTime @updatedAt
+
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+
+  // Very useful for faculty dashboard
   announcements Announcement[]
 }
 
-model Announcement {
-  id          String   @id @default(uuid())
-  title       String
-  description String
-  category    AnnouncementCategory
-  attachment  String?
-  createdAt   DateTime @default(now())
-  expiresAt   DateTime?
+model Student {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  semester  Int
+  createdAt DateTime @default(now())
 
-  adminId String
-  admin   User @relation(fields: [adminId], references: [id])
+  programId    String
+  departmentId String
 
-  @@index([category])
-  @@index([expiresAt])
+  program    Program    @relation(fields: [programId], references: [id])
+  department Department @relation(fields: [departmentId], references: [id])
 }
 
+// =========================
+// ANNOUNCEMENTS
+// =========================
+
+model Announcement {
+  id          String    @id @default(uuid())
+  title       String
+  description String
+  attachment  String?
+  priority    Priority
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime?
+  updatedAt   DateTime  @updatedAt
+
+  // Targeting
+  programId    String
+  departmentId String
+  semester     Int? // NULL = All semesters
+
+  // Author
+  facultyId String
+  faculty   Faculty @relation(fields: [facultyId], references: [id])
+
+  // Relations for efficient querying
+  program    Program    @relation(fields: [programId], references: [id])
+  department Department @relation(fields: [departmentId], references: [id])
+
+  @@index([priority])
+  @@index([expiresAt])
+}

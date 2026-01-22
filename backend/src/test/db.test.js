@@ -2,9 +2,9 @@ const prisma = require("../config/db");
 
 async function testDB() {
   try {
-    const users = await prisma.user.findMany();
+    const programs = await prisma.program.findMany();
     console.log("✅ Database connected successfully");
-    console.log(users);
+    console.log(programs);
   } catch (error) {
     console.error("❌ Database connection failed");
     console.error(error);
