@@ -9,8 +9,11 @@ const prisma = new PrismaClient();
  * POST /auth/student/signup
  */
 exports.studentSignup = async (req, res) => {
+  
+
   try {
     const { email, password, programId, departmentId, semester } = req.body;
+    
 
     // 1️⃣ Validate input
     if (!email || !password || !programId || !departmentId || !semester) {
@@ -64,6 +67,8 @@ exports.studentLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    
+
     // 1️⃣ Validate input
     if (!email || !password) {
       return res.status(400).json({
@@ -75,6 +80,8 @@ exports.studentLogin = async (req, res) => {
     const student = await prisma.student.findUnique({
       where: { email },
     });
+
+    console.log("🔍 STUDENT FOUND:", !!student);
 
     if (!student) {
       return res.status(401).json({
@@ -88,6 +95,8 @@ exports.studentLogin = async (req, res) => {
       student.password
     );
 
+    
+
     if (!isPasswordValid) {
       return res.status(401).json({
         message: "Invalid credentials",
@@ -99,6 +108,8 @@ exports.studentLogin = async (req, res) => {
       id: student.id,
       role: "STUDENT",
     });
+
+    
 
     // 5️⃣ Return response
     return res.status(200).json({

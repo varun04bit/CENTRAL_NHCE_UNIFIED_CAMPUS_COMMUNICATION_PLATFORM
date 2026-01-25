@@ -1,29 +1,62 @@
-import { View, TextInput, StyleSheet } from "react-native";
+import { View, TextInput, StyleSheet, Pressable } from "react-native";
 import { BlurView } from "expo-blur";
+import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
 
 export default function GlassInput({
+  value,
+  onChangeText,
   placeholder,
   secureTextEntry = false,
+  keyboardType = "default",
   rightIcon = null,
 }) {
+  const [showPassword, setShowPassword] = useState(false);
+
+  const isPassword = secureTextEntry;
+
   return (
     <View style={styles.wrapper}>
       <View style={styles.container}>
-        {/* BLUR LAYER */}
-        <BlurView intensity={25} tint="light" style={StyleSheet.absoluteFill} />
+        {/* BLUR */}
+        <BlurView
+          intensity={25}
+          tint="light"
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
 
-        {/* TOP GLASS HIGHLIGHT */}
+        {/* GLASS HIGHLIGHT */}
         <View style={styles.glassHighlight} />
 
         {/* CONTENT */}
         <View style={styles.content}>
           <TextInput
+            value={value}
+            onChangeText={onChangeText}
             placeholder={placeholder}
             placeholderTextColor="rgba(255,255,255,0.55)"
-            secureTextEntry={secureTextEntry}
+            secureTextEntry={isPassword && !showPassword}
+            keyboardType={keyboardType}
             style={styles.input}
           />
-          {rightIcon}
+
+          {/* PASSWORD TOGGLE */}
+          {isPassword && (
+            <Pressable
+              onPress={() => setShowPassword(!showPassword)}
+              hitSlop={10}
+            >
+              <Ionicons
+                name={showPassword ? "eye-off-outline" : "eye-outline"}
+                size={20}
+                color="rgba(255,255,255,0.7)"
+              />
+            </Pressable>
+          )}
+
+          {/* OPTIONAL RIGHT ICON (email etc.) */}
+          {!isPassword && rightIcon}
         </View>
       </View>
     </View>
@@ -35,17 +68,14 @@ const styles = StyleSheet.create({
     marginTop: 18,
   },
 
-  /* OUTER GLASS */
   container: {
     height: 54,
     borderRadius: 18,
     overflow: "hidden",
-
     borderWidth: 1,
     borderColor: "rgba(160,200,255,0.28)",
   },
 
-  /* TOP LIGHT REFLECTION */
   glassHighlight: {
     position: "absolute",
     top: 0,
@@ -61,8 +91,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-
     backgroundColor: "rgba(255,255,255,0.15)",
   },
 
@@ -71,5 +99,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 15,
     letterSpacing: 0.3,
+    marginRight: 10,
   },
 });

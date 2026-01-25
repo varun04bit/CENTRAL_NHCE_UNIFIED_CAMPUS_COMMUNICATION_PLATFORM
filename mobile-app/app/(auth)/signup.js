@@ -5,102 +5,195 @@ import {
   Pressable,
   Modal,
   FlatList,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import SlideToSignupButton from "../../components/SlideToSignupButton";
 import GlassInput from "@/components/GlassInput";
 import { BlurView } from "expo-blur";
-import { Ionicons } from "@expo/vector-icons";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
-const COURSES = ["B.E"];
+/* =========================
+   BACKEND-CONNECTED DATA
+========================= */
 
-const DEPARTMENTS = [
-  "DEPARTMENT OF APPLIED SCIENCES",
-  "COMPUTER SCIENCE & ENGINEERING",
-  "COMPUTER SCIENCE & ENGINEERING (DATA SCIENCE)",
-  "INFORMATION SCIENCE & ENGINEERING",
-  "CIVIL ENGINEERING",
-  "MECHANICAL ENGINEERING",
-  "ELECTRICAL & ELECTRONICS ENGINEERING",
-  "ELECTRONICS & COMMUNICATION ENGINEERING",
-  "ARTIFICIAL INTELLIGENCE & MACHINE LEARNING",
+// 🔴 USE REAL IDs FROM YOUR DB
+const PROGRAMS = [
+  {
+    id: "c1f35fc3-0623-4378-8722-7a204723e87a",
+    name: "BE",
+  },
 ];
+
+const DEPARTMENTS_BY_PROGRAM = {
+  BE: [
+    { id: "95aedf79-bbfb-44e1-b400-3a98bda48d4f", name: "MECH" },
+    { id: "b7b5cd1f-e2bd-40fc-8261-669facdb942c", name: "EEE" },
+    { id: "25f86767-daab-45af-bc7c-56c9c5a8d85c", name: "ECE" },
+    { id: "2b15d2ff-92bb-4a9d-ab13-28167d86dcb6", name: "CSE" },
+    { id: "9cfaac68-7533-40cd-9084-74034b44576f", name: "AIML" },
+    { id: "e6146188-5ca5-4568-8281-ab20d5690392", name: "DS" },
+    { id: "252c1811-023a-403b-8322-760a82eada32", name: "ISE" },
+  ],
+};
+
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
+
+/* =========================
+        SIGNUP SCREEN
+========================= */
 
 export default function Signup() {
   const router = useRouter();
 
-  const [course, setCourse] = useState("");
-  const [department, setDepartment] = useState("");
+  // form state
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [semester, setSemester] = useState("");
 
-  const [courseModal, setCourseModal] = useState(false);
+  const [program, setProgram] = useState(null);
+  const [department, setDepartment] = useState(null);
+
+  const [programModal, setProgramModal] = useState(false);
   const [deptModal, setDeptModal] = useState(false);
+
+  const departments =
+    program ? DEPARTMENTS_BY_PROGRAM[program.name] : [];
+
+  /* =========================
+         SIGNUP HANDLER
+  ========================= */
+
+  const handleSignup = async () => {
+
+
+    if (
+      !email ||
+      !password ||
+      !program ||
+      !department ||
+      semester === ""
+    ) {
+      Alert.alert("Error", "Please fill all fields");
+      return;
+    }
+
+    const sem = Number(semester);
+
+    if (isNaN(sem) || sem < 1 || sem > 8) {
+      Alert.alert("Error", "Semester must be between 1 and 8");
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/auth/student/signup`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            password,
+            programId: program.id,
+            departmentId: department.id,
+            semester: sem,
+          }),
+        }
+      );
+
+      // const data = await res.json();
+
+      const text = await res.text();
+console.log("RAW RESPONSE:", text);
+
+if (!res.ok) {
+  Alert.alert("Signup Failed", text);
+  return;
+}
+
+Alert.alert("Success", "Account created successfully");
+router.replace("/login");
+
+
+      if (!res.ok) {
+        Alert.alert("Signup Failed", data.message);
+        return;
+      }
+
+      Alert.alert("Success", "Account created successfully");
+      router.replace("/login");
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "Something went wrong");
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome!!!!</Text>
-      <Text style={styles.subtitle}>Create an account to be a part of the fam..</Text>
-
-      <Text style={styles.label}>FULL NAME</Text>
-      <GlassInput placeholder="Enter your full name" />
-
-      <Text style={styles.label}>EMAIL</Text>
-      <GlassInput placeholder="Enter your email" />
-
-      <Text style={styles.label}>PASSWORD</Text>
-      <GlassInput placeholder="Create a password" secureTextEntry />
-
-      {/* COURSE */}
-      <Text style={styles.label}>COURSE</Text>
-      <Pressable style={styles.glassRow} onPress={() => setCourseModal(true)}>
-        <BlurView intensity={25} tint="light" style={StyleSheet.absoluteFill} />
-        <View style={styles.glassHighlight} />
-        <Text style={[styles.valueText, !course && styles.placeholder]}>
-          {course || "Select course"}
-        </Text>
-        <Ionicons name="chevron-down" size={18} color="#ddd" />
-      </Pressable>
-
-      {/* DEPARTMENT */}
-      <Text style={styles.label}>DEPARTMENT</Text>
-      <Pressable style={styles.glassRow} onPress={() => setDeptModal(true)}>
-        <BlurView intensity={25} tint="light" style={StyleSheet.absoluteFill} />
-        <View style={styles.glassHighlight} />
-        <Text style={[styles.valueText, !department && styles.placeholder]}>
-          {department || "Select department"}
-        </Text>
-        <Ionicons name="chevron-down" size={18} color="#ddd" />
-      </Pressable>
-
-      {/* SEMESTER */}
-      <Text style={styles.label}>SEMESTER</Text>
-      <GlassInput placeholder="Enter semester" />
-
-      <SlideToSignupButton onComplete={() => console.log("Signup triggered")} />
-
-      <Text style={styles.footer}>
-        Already have an account?{" "}
-        <Text style={styles.link} onPress={() => router.push("/login")}>
-          Login
-        </Text>
+      <Text style={styles.title}>Welcome!</Text>
+      <Text style={styles.subtitle}>
+        Create an account to continue
       </Text>
 
-      {/* COURSE MODAL */}
+      <Text style={styles.label}>EMAIL</Text>
+      <GlassInput
+        value={email}
+        onChangeText={setEmail}
+        placeholder="name@campus.ac.in"
+      />
+
+      <Text style={styles.label}>PASSWORD</Text>
+      <GlassInput
+  placeholder="Create password"
+  secureTextEntry
+  value={password}
+  onChangeText={setPassword}
+/>
+
+      <Text style={styles.label}>PROGRAM</Text>
+      <Dropdown
+        value={program?.name}
+        placeholder="Select program"
+        onPress={() => setProgramModal(true)}
+      />
+
+      <Text style={styles.label}>DEPARTMENT</Text>
+      <Dropdown
+        value={department?.name}
+        placeholder="Select department"
+        onPress={() => setDeptModal(true)}
+        disabled={!program}
+      />
+
+      <Text style={styles.label}>SEMESTER</Text>
+      <GlassInput
+        keyboardType="numeric"
+        value={semester}
+        onChangeText={setSemester}
+        placeholder="1 - 8"
+      />
+
+      {/* ✅ REPLACED SLIDE BUTTON */}
+      <Pressable style={styles.signupBtn} onPress={handleSignup}>
+        <Text style={styles.signupText}>SIGN UP</Text>
+      </Pressable>
+
+      {/* PROGRAM MODAL */}
       <GlassModal
-        visible={courseModal}
-        data={COURSES}
-        onClose={() => setCourseModal(false)}
+        visible={programModal}
+        data={PROGRAMS}
+        onClose={() => setProgramModal(false)}
         onSelect={(item) => {
-          setCourse(item);
-          setCourseModal(false);
+          setProgram(item);
+          setDepartment(null);
+          setProgramModal(false);
         }}
       />
 
       {/* DEPARTMENT MODAL */}
       <GlassModal
         visible={deptModal}
-        data={DEPARTMENTS}
+        data={departments}
         onClose={() => setDeptModal(false)}
         onSelect={(item) => {
           setDepartment(item);
@@ -111,26 +204,56 @@ export default function Signup() {
   );
 }
 
-/* GLASS MODAL COMPONENT */
+/* =========================
+        REUSABLE UI
+========================= */
+
+function Dropdown({ value, placeholder, onPress, disabled }) {
+  return (
+    <Pressable
+      style={[
+        styles.glassRow,
+        disabled && { opacity: 0.5 },
+      ]}
+      onPress={onPress}
+      disabled={disabled}
+    >
+      <BlurView
+        intensity={25}
+        tint="light"
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
+      <Text style={styles.valueText}>
+        {value || placeholder}
+      </Text>
+      <Ionicons name="chevron-down" size={18} color="#ddd" />
+    </Pressable>
+  );
+}
+
 function GlassModal({ visible, data, onClose, onSelect }) {
   return (
     <Modal transparent visible={visible} animationType="fade">
-      {/* FULL SCREEN BLUR */}
-      <BlurView intensity={100} tint="dark" style={StyleSheet.absoluteFill} />
-
-      {/* DARK OVERLAY + CENTERED DROPDOWN */}
+      <BlurView
+        intensity={100}
+        tint="dark"
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
       <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable style={styles.modal} onPress={() => {}}>
-          {/* DROPDOWN CONTENT (NO BLUR HERE) */}
+        <Pressable style={styles.modal}>
           <FlatList
             data={data}
-            keyExtractor={(item) => item}
+            keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
               <Pressable
                 style={styles.option}
                 onPress={() => onSelect(item)}
               >
-                <Text style={styles.optionText}>{item}</Text>
+                <Text style={styles.optionText}>
+                  {item.name}
+                </Text>
               </Pressable>
             )}
           />
@@ -140,6 +263,9 @@ function GlassModal({ visible, data, onClose, onSelect }) {
   );
 }
 
+/* =========================
+            STYLES
+========================= */
 
 const styles = StyleSheet.create({
   container: {
@@ -149,16 +275,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   title: {
-    fontFamily:"Inter-SemiBoldItalic",
-    fontSize: 50,
+    fontSize: 40,
     fontWeight: "700",
     color: "#fff",
-    marginBottom: 6,
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 16,
     color: "#aaa",
-    marginBottom: 30,
+    marginBottom: 24,
   },
   label: {
     color: "#888",
@@ -166,8 +290,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 6,
   },
-
-  /* GLASS DROPDOWN ROW */
   glassRow: {
     height: 54,
     borderRadius: 18,
@@ -177,63 +299,40 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    overflow: "hidden",
+    marginTop: 8,
   },
-
-  glassHighlight: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 12,
-    backgroundColor: "rgba(255,255,255,0.22)",
-  },
-
   valueText: {
     color: "#fff",
     fontSize: 15,
-    flex: 1,
   },
-
-  placeholder: {
-    color: "rgba(255,255,255,0.55)",
+  signupBtn: {
+    marginTop: 32,
+    backgroundColor: "#fff",
+    paddingVertical: 16,
+    borderRadius: 16,
   },
-
-  footer: {
-    color: "#aaa",
+  signupText: {
+    color: "#000",
     textAlign: "center",
-    marginTop: 28,
+    fontWeight: "700",
+    fontSize: 16,
   },
-
-  link: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.05)",
     justifyContent: "center",
     padding: 24,
   },
-
   modal: {
-    backgroundColor: "#413e3e", // SOLID background → stays sharp
+    backgroundColor: "#413e3e",
     borderRadius: 18,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(160,200,255,0.28)",
     maxHeight: "65%",
   },
-
   option: {
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255,255,255,0.12)",
   },
-
   optionText: {
     color: "#fff",
-    fontSize: 14,
   },
 });
