@@ -1,3 +1,5 @@
+
+
 const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcrypt");
 const { generateToken } = require("../utils/jwt");
@@ -23,17 +25,11 @@ exports.login = async (req, res) => {
       where: { email },
     });
 
-    console.log("🔍 FACULTY FOUND:", !!faculty);
-
     if (faculty) {
       const isValid = await bcrypt.compare(password, faculty.password);
 
-      console.log("🔐 FACULTY PASSWORD MATCH:", isValid);
-
       if (!isValid) {
-        return res.status(401).json({
-          message: "Invalid credentials",
-        });
+        return res.status(401).json({ message: "Invalid credentials" });
       }
 
       const token = generateToken({
@@ -42,7 +38,7 @@ exports.login = async (req, res) => {
       });
 
       console.log(
-        "✅ FACULTY LOGIN SUCCESS",
+        "✅ FACULTY LOGIN",
         faculty.email,
         "FIRST LOGIN:",
         faculty.isFirstLogin
@@ -67,8 +63,6 @@ exports.login = async (req, res) => {
       where: { email },
     });
 
-    console.log("🔍 STUDENT FOUND:", !!student);
-
     if (!student) {
       return res.status(401).json({
         message: "Invalid credentials",
@@ -76,8 +70,6 @@ exports.login = async (req, res) => {
     }
 
     const isValid = await bcrypt.compare(password, student.password);
-
-    console.log("🔐 STUDENT PASSWORD MATCH:", isValid);
 
     if (!isValid) {
       return res.status(401).json({
@@ -90,7 +82,7 @@ exports.login = async (req, res) => {
       role: "STUDENT",
     });
 
-    console.log("✅ STUDENT LOGIN SUCCESS", student.email);
+    console.log("✅ STUDENT LOGIN", student.email);
 
     return res.status(200).json({
       token,

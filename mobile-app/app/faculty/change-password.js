@@ -1,3 +1,5 @@
+
+
 import {
   View,
   Text,
@@ -63,6 +65,12 @@ export default function ChangePassword() {
 
       const token = await AsyncStorage.getItem("token");
 
+      if (!token) {
+        Alert.alert("Session expired", "Please login again");
+        router.replace("/login");
+        return;
+      }
+
       const res = await fetch(
         `${API_BASE_URL}/auth/faculty/update-password`,
         {
@@ -87,13 +95,17 @@ export default function ChangePassword() {
         return;
       }
 
+      // 🔐 IMPORTANT SECURITY STEP
+      // Clear old token & role and force fresh login
+      await AsyncStorage.multiRemove(["token", "role"]);
+
       Alert.alert(
         "Success",
-        "Password updated successfully",
+        "Password updated successfully. Please login again.",
         [
           {
             text: "OK",
-            onPress: () => router.replace("/"),
+            onPress: () => router.replace("/login"),
           },
         ]
       );
@@ -115,11 +127,11 @@ export default function ChangePassword() {
 
         <Text style={styles.label}>NEW PASSWORD</Text>
         <GlassInput
-  placeholder="Enter new password"
-  secureTextEntry
-  value={newPassword}
-  onChangeText={setNewPassword}
-/>
+          placeholder="Enter new password"
+          secureTextEntry
+          value={newPassword}
+          onChangeText={setNewPassword}
+        />
 
         <Pressable
           style={[
