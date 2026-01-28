@@ -1,5 +1,4 @@
 require("dotenv").config();
-
 const { generateToken } = require("../utils/jwt");
 
 async function adminLogin(req, res) {
@@ -7,18 +6,14 @@ async function adminLogin(req, res) {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({
-        message: "Email and password are required",
-      });
+      return res.status(400).json({ message: "Email and password required" });
     }
 
     if (
       email !== process.env.ADMIN_EMAIL ||
       password !== process.env.ADMIN_PASSWORD
     ) {
-      return res.status(401).json({
-        message: "Invalid admin credentials",
-      });
+      return res.status(401).json({ message: "Invalid admin credentials" });
     }
 
     const token = generateToken({
@@ -26,17 +21,11 @@ async function adminLogin(req, res) {
       role: "ADMIN",
     });
 
-    return res.status(200).json({
-      token,
-    });
-  } catch (error) {
-    console.error("Admin login error:", error);
-    return res.status(500).json({
-      message: "Internal server error",
-    });
+    res.json({ token });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
 }
 
-module.exports = {
-  adminLogin,
-};
+module.exports = { adminLogin };

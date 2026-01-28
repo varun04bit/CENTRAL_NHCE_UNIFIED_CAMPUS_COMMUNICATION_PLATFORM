@@ -7,44 +7,47 @@ async function createFaculty(req, res) {
 
     if (!name || !email || !tempPassword || !departmentId) {
       return res.status(400).json({
-        message: "All fields are required",
+        message: "All fields required",
       });
     }
 
-    const existing = await prisma.faculty.findUnique({
+    // Check department exists
+    const dept = await prisma.department.findUnique({
+      where: { id: departmentId },
+    });
+
+    if (!dept) {
+      return res.status(400).json({ message: "Invalid departmentId" });
+    }
+
+    const exists = await prisma.faculty.findUnique({
       where: { email },
     });
 
-    if (existing) {
-      return res.status(409).json({
-        message: "Faculty already exists",
-      });
+    if (exists) {
+      return res.status(409).json({ message: "Faculty already exists" });
     }
 
-    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+    const hashed = await bcrypt.hash(tempPassword, 10);
 
     const faculty = await prisma.faculty.create({
       data: {
         name,
         email,
-        password: hashedPassword,
+        password: hashed,
         departmentId,
         isFirstLogin: true,
       },
     });
 
-    return res.status(201).json({
-      message: "Faculty created successfully",
+    res.status(201).json({
+      message: "Faculty created",
       facultyId: faculty.id,
     });
-  } catch (error) {
-    console.error("Create faculty error:", error);
-    return res.status(500).json({
-      message: "Internal server error",
-    });
+  } catch (err) {
+    console.error("Create faculty error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 }
 
-module.exports = {
-  createFaculty,
-};
+module.exports = { createFaculty };
