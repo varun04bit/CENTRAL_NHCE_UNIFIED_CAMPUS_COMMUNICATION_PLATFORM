@@ -27,6 +27,9 @@ const studentAuthRoutes = require("./routes/studentAuth.routes");
 const facultyAuthRoutes = require("./routes/facultyAuth.routes");
 const adminAuthRoutes = require("./routes/adminAuth.routes");
 const adminRoutes = require("./routes/admin.routes");
+const announcementRoutes = require("./routes/announcement.routes");
+const metaRoutes = require("./routes/meta.routes");
+
 
 const app = express();
 
@@ -39,6 +42,9 @@ app.use("/auth/student", studentAuthRoutes);
 app.use("/auth/faculty", facultyAuthRoutes);
 app.use("/auth/admin", adminAuthRoutes);
 app.use("/admin", adminRoutes);
+app.use("/announcements", announcementRoutes);
+app.use("/meta", metaRoutes);
+
 
 app.listen(5000, () => {
   console.log("🚀 Server running on port 5000");
