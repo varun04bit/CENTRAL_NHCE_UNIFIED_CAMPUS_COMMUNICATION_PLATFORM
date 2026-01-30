@@ -1,6 +1,6 @@
-import { saveUploadedFile } from "../services/upload.service.js";
+const { saveUploadedFile } = require("../services/upload.service");
 
-export const uploadFile = async (req, res) => {
+const uploadFile = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "File is required" });
@@ -22,4 +22,8 @@ export const uploadFile = async (req, res) => {
       error: err.message
     });
   }
+};
+
+module.exports = {
+  uploadFile
 };

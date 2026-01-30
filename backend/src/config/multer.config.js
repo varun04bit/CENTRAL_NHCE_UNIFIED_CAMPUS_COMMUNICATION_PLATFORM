@@ -1,6 +1,6 @@
-import multer from "multer";
-import fs from "fs";
-import path from "path";
+const multer = require("multer");
+const fs = require("fs");
+const path = require("path");
 
 const uploadDir = "uploads/announcements";
 
@@ -32,8 +32,12 @@ const fileFilter = (req, file, cb) => {
   cb(null, true);
 };
 
-export const upload = multer({
+const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 100 * 1024 * 1024 }
+  limits: { fileSize: 100 * 1024 * 1024 } // 100MB
 });
+
+module.exports = {
+  upload
+};

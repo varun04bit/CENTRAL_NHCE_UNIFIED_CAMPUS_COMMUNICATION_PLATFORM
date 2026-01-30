@@ -44,7 +44,7 @@ exports.createAnnouncement = async (req, res) => {
         departmentId: faculty.departmentId,
         programId: faculty.department.programId,
 
-        uploadedFileId: uploadedFileId ?? null,
+        uploadedFileId: uploadedFileId ?? null
       },
     });
 

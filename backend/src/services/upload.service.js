@@ -1,6 +1,6 @@
-import prisma from "../config/prisma.js";
+const prisma = require("../config/db");
 
-export const saveUploadedFile = async (file, baseUrl) => {
+const saveUploadedFile = async (file, baseUrl) => {
   const url = `${baseUrl}/${file.path.replace(/\\/g, "/")}`;
 
   return prisma.uploadedFile.create({
@@ -11,4 +11,8 @@ export const saveUploadedFile = async (file, baseUrl) => {
       url
     }
   });
+};
+
+module.exports = {
+  saveUploadedFile
 };
