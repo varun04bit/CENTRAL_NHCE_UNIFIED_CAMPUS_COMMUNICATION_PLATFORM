@@ -145,21 +145,12 @@ export default function Signup() {
 console.log("RAW RESPONSE:", text);
 
 if (!res.ok) {
-  Alert.alert("Signup Failed", text);
+  Alert.alert("Signup Failed", data.message || "Signup failed");
   return;
 }
 
 Alert.alert("Success", "Account created successfully");
 router.replace("/login");
-
-
-      if (!res.ok) {
-        Alert.alert("Signup Failed", data.message);
-        return;
-      }
-
-      Alert.alert("Success", "Account created successfully");
-      router.replace("/login");
     } catch (error) {
       console.error(error);
       Alert.alert("Error", "Something went wrong");
