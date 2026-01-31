@@ -62,7 +62,8 @@ model UploadedFile {
   url       String
   createdAt DateTime @default(now())
 
-  announcements Announcement[]
+  announcementId String?
+  announcement   Announcement? @relation(fields: [announcementId], references: [id])
 }
 
 
@@ -78,16 +79,17 @@ model Announcement {
   programId    String
   semester     Int?
   updatedAt    DateTime   @updatedAt
+
   department   Department @relation(fields: [departmentId], references: [id])
   faculty      Faculty    @relation(fields: [facultyId], references: [id])
   program      Program    @relation(fields: [programId], references: [id])
-  uploadedFileId String?
-uploadedFile   UploadedFile? @relation(fields: [uploadedFileId], references: [id])
 
+  files        UploadedFile[]   // 👈 NEW
 
   @@index([priority])
   @@index([expiresAt])
 }
+
 
 enum Priority {
   PINNED

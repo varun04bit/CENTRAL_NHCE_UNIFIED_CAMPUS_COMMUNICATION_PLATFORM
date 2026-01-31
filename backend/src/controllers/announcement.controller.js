@@ -6,47 +6,103 @@ const prisma = require("../config/db");
  * POST /announcements
  * ============================
  */
+// exports.createAnnouncement = async (req, res) => {
+//   try {
+//     const facultyId = req.user.id;
+//     const { title, description, priority, semester, uploadedFileId } = req.body;
+
+//     // Basic validation
+//     if (!title || !description || !priority) {
+//       return res.status(400).json({
+//         message: "Title, description, and priority are required",
+//       });
+//     }
+
+//     // Fetch faculty to derive department & program
+//     const faculty = await prisma.faculty.findUnique({
+//       where: { id: facultyId },
+//       include: {
+//         department: true,
+//       },
+//     });
+
+//     if (!faculty) {
+//       return res.status(404).json({
+//         message: "Faculty not found",
+//       });
+//     }
+
+//     // Create announcement
+//     const announcement = await prisma.announcement.create({
+//       data: {
+//         title,
+//         description,
+//         priority,
+//         semester: semester ?? null,
+
+//         facultyId,
+//         departmentId: faculty.departmentId,
+//         programId: faculty.department.programId,
+
+//         uploadedFileId: uploadedFileId ?? null
+//       },
+//     });
+
+//     return res.status(201).json({
+//       message: "Announcement created successfully",
+//       announcement,
+//     });
+//   } catch (error) {
+//     console.error("❌ Create announcement error:", error);
+//     return res.status(500).json({
+//       message: "Internal server error",
+//     });
+//   }
+// };
 exports.createAnnouncement = async (req, res) => {
   try {
     const facultyId = req.user.id;
-    const { title, description, priority, semester, uploadedFileId } = req.body;
+    const { title, description, priority, semester, fileIds = [] } = req.body;
 
-    // Basic validation
     if (!title || !description || !priority) {
       return res.status(400).json({
         message: "Title, description, and priority are required",
       });
     }
 
-    // Fetch faculty to derive department & program
     const faculty = await prisma.faculty.findUnique({
       where: { id: facultyId },
-      include: {
-        department: true,
-      },
+      include: { department: true },
     });
 
     if (!faculty) {
-      return res.status(404).json({
-        message: "Faculty not found",
-      });
+      return res.status(404).json({ message: "Faculty not found" });
     }
 
-    // Create announcement
+    // 1️⃣ Create announcement FIRST
     const announcement = await prisma.announcement.create({
       data: {
         title,
         description,
         priority,
         semester: semester ?? null,
-
         facultyId,
         departmentId: faculty.departmentId,
         programId: faculty.department.programId,
-
-        uploadedFileId: uploadedFileId ?? null
       },
     });
+
+    // 2️⃣ Link uploaded files (if any)
+    if (fileIds.length > 0) {
+      await prisma.uploadedFile.updateMany({
+        where: {
+          id: { in: fileIds },
+        },
+        data: {
+          announcementId: announcement.id,
+        },
+      });
+    }
 
     return res.status(201).json({
       message: "Announcement created successfully",
@@ -59,6 +115,8 @@ exports.createAnnouncement = async (req, res) => {
     });
   }
 };
+
+
 
 /**
  * ============================
@@ -83,45 +141,103 @@ exports.getStudentAnnouncements = async (req, res) => {
       return res.status(404).json({ message: "Student not found" });
     }
 
-    const [announcements, total] = await Promise.all([
-      prisma.announcement.findMany({
-        where: {
-          programId: student.programId,
-          departmentId: student.departmentId,
-          AND: [
-            {
-              OR: [
-                { semester: student.semester },
-                { semester: null },
-              ],
-            },
-            {
-              OR: [
-                { expiresAt: null },
-                { expiresAt: { gt: new Date() } },
-              ],
-            },
-          ],
-        },
-        orderBy: [
-          { priority: "desc" },
-          { createdAt: "desc" },
-        ],
-        skip,
-        take: limit,
-        include: {
-          faculty: { select: { name: true } },
-          uploadedFile: true,
-        },
-      }),
+    // const [announcements, total] = await Promise.all([
+    //   prisma.announcement.findMany({
+    //     where: {
+    //       programId: student.programId,
+    //       departmentId: student.departmentId,
+    //       AND: [
+    //         {
+    //           OR: [
+    //             { semester: student.semester },
+    //             { semester: null },
+    //           ],
+    //         },
+    //         {
+    //           OR: [
+    //             { expiresAt: null },
+    //             { expiresAt: { gt: new Date() } },
+    //           ],
+    //         },
+    //       ],
+    //     },
+    //     orderBy: [
+    //       { priority: "desc" },
+    //       { createdAt: "desc" },
+    //     ],
+    //     skip,
+    //     take: limit,
+    //     include: {
+    //       faculty: { select: { name: true } },
+    //       uploadedFile: true,
+    //     },
+    //   }),
 
-      prisma.announcement.count({
+    //   prisma.announcement.count({
+    //     where: {
+    //       programId: student.programId,
+    //       departmentId: student.departmentId,
+    //     },
+    //   }),
+    // ]);
+
+    exports.createAnnouncement = async (req, res) => {
+  try {
+    const facultyId = req.user.id;
+    const { title, description, priority, semester, fileIds = [] } = req.body;
+
+    if (!title || !description || !priority) {
+      return res.status(400).json({
+        message: "Title, description, and priority are required",
+      });
+    }
+
+    const faculty = await prisma.faculty.findUnique({
+      where: { id: facultyId },
+      include: { department: true },
+    });
+
+    if (!faculty) {
+      return res.status(404).json({ message: "Faculty not found" });
+    }
+
+    // 1️⃣ Create announcement FIRST
+    const announcement = await prisma.announcement.create({
+      data: {
+        title,
+        description,
+        priority,
+        semester: semester ?? null,
+        facultyId,
+        departmentId: faculty.departmentId,
+        programId: faculty.department.programId,
+      },
+    });
+
+    // 2️⃣ Link uploaded files (if any)
+    if (fileIds.length > 0) {
+      await prisma.uploadedFile.updateMany({
         where: {
-          programId: student.programId,
-          departmentId: student.departmentId,
+          id: { in: fileIds },
         },
-      }),
-    ]);
+        data: {
+          announcementId: announcement.id,
+        },
+      });
+    }
+
+    return res.status(201).json({
+      message: "Announcement created successfully",
+      announcement,
+    });
+  } catch (error) {
+    console.error("❌ Create announcement error:", error);
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+};
+
 
     return res.json({
       page,
