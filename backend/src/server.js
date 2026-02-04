@@ -47,6 +47,8 @@ const adminRoutes = require("./routes/admin.routes");
 const announcementRoutes = require("./routes/announcement.routes");
 const metaRoutes = require("./routes/meta.routes");
 const uploadRoutes = require("./routes/upload.routes");
+const newsletterRoutes = require("./routes/newsletter.routes");
+
 
 const app = express();
 
@@ -62,6 +64,8 @@ app.use("/admin", adminRoutes); //to create the faculty
 app.use("/announcements", announcementRoutes); // announcement functions
 app.use("/meta", metaRoutes); // import the department and program
 app.use("/api",uploadRoutes); // to upload the media 
+app.use("/", newsletterRoutes);
+
 
 app.use((err, req, res, next) => {
   console.error(err);

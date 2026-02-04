@@ -39,6 +39,7 @@ model Faculty {
   updatedAt     DateTime       @updatedAt
   departmentId  String
   announcements Announcement[]
+  newsletters   Newsletter[]
   department    Department     @relation(fields: [departmentId], references: [id])
 }
 
@@ -64,35 +65,57 @@ model UploadedFile {
 
   announcementId String?
   announcement   Announcement? @relation(fields: [announcementId], references: [id])
+
+  newsletterId String?
+  newsletter   Newsletter? @relation(fields: [newsletterId], references: [id])
 }
 
-
 model Announcement {
-  id           String     @id @default(uuid())
+  id           String    @id @default(uuid())
   title        String
   description  String
-  createdAt    DateTime   @default(now())
+  createdAt    DateTime  @default(now())
   expiresAt    DateTime?
   departmentId String
   facultyId    String
   priority     Priority
   programId    String
   semester     Int?
-  updatedAt    DateTime   @updatedAt
+  updatedAt    DateTime  @updatedAt
 
-  department   Department @relation(fields: [departmentId], references: [id])
-  faculty      Faculty    @relation(fields: [facultyId], references: [id])
-  program      Program    @relation(fields: [programId], references: [id])
+  department Department @relation(fields: [departmentId], references: [id])
+  faculty    Faculty    @relation(fields: [facultyId], references: [id])
+  program    Program    @relation(fields: [programId], references: [id])
 
-  files        UploadedFile[]   // 👈 NEW
+  files UploadedFile[] // 👈 NEW
 
   @@index([priority])
   @@index([expiresAt])
 }
 
-
 enum Priority {
   PINNED
   HIGH
   INFO
+}
+
+model Newsletter {
+  id          String  @id @default(uuid())
+  title       String
+  description String?
+  month       Int // 1–12
+  year        Int
+
+  programId    String? // null = global
+  departmentId String? // null = global
+
+  createdById String
+  createdBy   Faculty @relation(fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  files UploadedFile[]
+
+  @@unique([month, year, programId, departmentId])
 }
