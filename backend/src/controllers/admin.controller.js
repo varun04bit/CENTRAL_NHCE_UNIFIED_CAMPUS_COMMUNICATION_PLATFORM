@@ -11,9 +11,12 @@ async function createFaculty(req, res) {
       });
     }
 
-    // Check department exists
+    // Fetch department WITH program
     const dept = await prisma.department.findUnique({
       where: { id: departmentId },
+      include: {
+        program: true, // brings program
+      },
     });
 
     if (!dept) {
@@ -40,9 +43,12 @@ async function createFaculty(req, res) {
       },
     });
 
+    // Program + Department returned
     res.status(201).json({
       message: "Faculty created",
       facultyId: faculty.id,
+      program: dept.program.name,
+      department: dept.name,
     });
   } catch (err) {
     console.error("Create faculty error:", err);
