@@ -3,7 +3,7 @@ node_modules/
 
 # Environment variables (DO NOT COMMIT)
 .env
-
+prisma/baseline.sql
 # Prisma generated client (auto-generated)
 node_modules/.prisma/
 node_modules/@prisma/

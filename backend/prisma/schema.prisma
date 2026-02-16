@@ -1,21 +1,97 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-  url = env("DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
-// =========================
-// ENUMS
-// =========================
+model Program {
+  id            String         @id @default(uuid())
+  name          String         @unique
+  createdAt     DateTime       @default(now())
+  announcements Announcement[]
+  departments   Department[]
+  students      Student[]
+}
+
+model Department {
+  id            String         @id @default(uuid())
+  name          String
+  createdAt     DateTime       @default(now())
+  programId     String
+  announcements Announcement[]
+  program       Program        @relation(fields: [programId], references: [id])
+  faculties     Faculty[]
+  students      Student[]
+
+  @@unique([name, programId])
+}
+
+model Faculty {
+  id            String         @id @default(uuid())
+  name          String
+  email         String         @unique
+  password      String
+  createdAt     DateTime       @default(now())
+  isFirstLogin  Boolean        @default(true)
+  updatedAt     DateTime       @updatedAt
+  departmentId  String
+  announcements Announcement[]
+  newsletters   Newsletter[]
+  department    Department     @relation(fields: [departmentId], references: [id])
+}
+
+model Student {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  password     String
+  semester     Int
+  createdAt    DateTime   @default(now())
+  programId    String
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+  program      Program    @relation(fields: [programId], references: [id])
+}
+
+model UploadedFile {
+  id        String   @id @default(uuid())
+  filePath  String
+  mimeType  String
+  size      Int
+  url       String
+  createdAt DateTime @default(now())
+
+  announcementId String?
+  announcement   Announcement? @relation(fields: [announcementId], references: [id])
+
+  newsletterId String?
+  newsletter   Newsletter? @relation(fields: [newsletterId], references: [id])
+}
+
+model Announcement {
+  id           String    @id @default(uuid())
+  title        String
+  description  String
+  createdAt    DateTime  @default(now())
+  expiresAt    DateTime?
+  departmentId String
+  facultyId    String
+  priority     Priority
+  programId    String
+  semester     Int?
+  updatedAt    DateTime  @updatedAt
+
+  department Department @relation(fields: [departmentId], references: [id])
+  faculty    Faculty    @relation(fields: [facultyId], references: [id])
+  program    Program    @relation(fields: [programId], references: [id])
+
+  files UploadedFile[] // 👈 NEW
+
+  @@index([priority])
+  @@index([expiresAt])
+}
 
 enum Priority {
   PINNED
@@ -23,98 +99,23 @@ enum Priority {
   INFO
 }
 
-// =========================
-// CORE MASTER TABLES
-// =========================
-
-model Program {
-  id        String   @id @default(uuid())
-  name      String   @unique // BE, BBA, BCOM, MBA, MCOM, MTECH
-  createdAt DateTime @default(now())
-
-  // Useful for dropdowns & dashboards
-  departments   Department[]
-  announcements Announcement[]
-  students      Student[]
-}
-
-model Department {
-  id        String   @id @default(uuid())
-  name      String
-  createdAt DateTime @default(now())
-
-  programId String
-  program   Program @relation(fields: [programId], references: [id])
-
-  // Useful for department-level views
-  faculties     Faculty[]
-  announcements Announcement[]
-  students      Student[]
-
-  @@unique([name, programId])
-}
-
-// =========================
-// USERS
-// =========================
-
-model Faculty {
-  id           String   @id @default(uuid())
-  name         String
-  email        String   @unique
-  password     String
-  createdAt    DateTime @default(now())
-  isFirstLogin Boolean  @default(true)
-  updatedAt    DateTime @updatedAt
-
-  departmentId String
-  department   Department @relation(fields: [departmentId], references: [id])
-
-  // Very useful for faculty dashboard
-  announcements Announcement[]
-}
-
-model Student {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  semester  Int
-  createdAt DateTime @default(now())
-
-  programId    String
-  departmentId String
-
-  program    Program    @relation(fields: [programId], references: [id])
-  department Department @relation(fields: [departmentId], references: [id])
-}
-
-// =========================
-// ANNOUNCEMENTS
-// =========================
-
-model Announcement {
-  id          String    @id @default(uuid())
+model Newsletter {
+  id          String  @id @default(uuid())
   title       String
-  description String
-  attachment  String?
-  priority    Priority
-  createdAt   DateTime  @default(now())
-  expiresAt   DateTime?
-  updatedAt   DateTime  @updatedAt
+  description String?
+  month       Int // 1–12
+  year        Int
 
-  // Targeting
-  programId    String
-  departmentId String
-  semester     Int? // NULL = All semesters
+  programId    String? // null = global
+  departmentId String? // null = global
 
-  // Author
-  facultyId String
-  faculty   Faculty @relation(fields: [facultyId], references: [id])
+  createdById String
+  createdBy   Faculty @relation(fields: [createdById], references: [id])
 
-  // Relations for efficient querying
-  program    Program    @relation(fields: [programId], references: [id])
-  department Department @relation(fields: [departmentId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@index([priority])
-  @@index([expiresAt])
+  files UploadedFile[]
+
+  @@unique([month, year, programId, departmentId])
 }
