@@ -84,7 +84,12 @@ console.log(
       }
 
       // ✅ Normal login (student or faculty)
-      router.replace("/");
+      // router.replace("/");
+      if (data.role === "FACULTY") {
+  router.replace("/faculty");
+} else {
+  router.replace("/");
+}
 
     } catch (error) {
       console.error("Login error:", error);
