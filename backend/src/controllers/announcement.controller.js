@@ -1,5 +1,5 @@
 const prisma = require("../config/db");
-
+const {handleAnnouncementPush} = require("../controllers/announcementPush.controller");
 /**
  * ============================
  * FACULTY: CREATE ANNOUNCEMENT
@@ -50,6 +50,8 @@ exports.createAnnouncement = async (req, res) => {
         },
       });
     }
+
+    await handleAnnouncementPush(announcement.id);
 
     return res.status(201).json({
       message: "Announcement created successfully",

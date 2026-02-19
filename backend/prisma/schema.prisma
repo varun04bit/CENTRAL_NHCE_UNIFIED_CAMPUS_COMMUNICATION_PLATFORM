@@ -44,15 +44,21 @@ model Faculty {
 }
 
 model Student {
-  id           String     @id @default(uuid())
-  email        String     @unique
-  password     String
-  semester     Int
-  createdAt    DateTime   @default(now())
-  programId    String
-  departmentId String
-  department   Department @relation(fields: [departmentId], references: [id])
-  program      Program    @relation(fields: [programId], references: [id])
+  id                  String     @id @default(uuid())
+  email               String     @unique
+  password            String
+  semester            Int
+  createdAt           DateTime   @default(now())
+  programId           String
+  departmentId        String
+
+  // 🔔 Push Notification Fields (NEW)
+  expoPushToken       String?
+  pushEnabled         Boolean    @default(false)
+  pushTokenUpdatedAt  DateTime?
+
+  department          Department @relation(fields: [departmentId], references: [id])
+  program             Program    @relation(fields: [programId], references: [id])
 }
 
 model UploadedFile {
@@ -87,7 +93,7 @@ model Announcement {
   faculty    Faculty    @relation(fields: [facultyId], references: [id])
   program    Program    @relation(fields: [programId], references: [id])
 
-  files UploadedFile[] // 👈 NEW
+  files UploadedFile[]
 
   @@index([priority])
   @@index([expiresAt])
