@@ -1,37 +1,3 @@
-// const express = require("express");
-// const cors = require("cors");
-
-// const authRoutes = require("./routes/auth.routes");
-// const studentAuthRoutes = require("./routes/studentAuth.routes");
-// const facultyAuthRoutes = require("./routes/facultyAuth.routes");
-// const adminAuthRoutes = require("./routes/adminAuth.routes");
-// const adminRoutes = require("./routes/admin.routes");
-// const announcementRoutes = require("./routes/announcement.routes");
-// const metaRoutes = require("./routes/meta.routes");
-
-
-// const app = express();
-
-// app.use(cors());
-// app.use(express.json());
-
-// // Auth routes
-// app.use("/auth", authRoutes);
-// app.use("/auth/student", studentAuthRoutes);
-// app.use("/auth/faculty", facultyAuthRoutes);
-// app.use("/auth/admin", adminAuthRoutes);
-// app.use("/admin", adminRoutes);
-// app.use("/announcements", announcementRoutes);
-// app.use("/meta", metaRoutes);
-
-
-// require("dotenv").config();
-
-// const PORT = process.env.PORT || 5000;
-
-// app.listen(PORT, () => {
-//   console.log(`🚀 Server running on port ${PORT}`);
-// });
 
 require("dotenv").config();
 
