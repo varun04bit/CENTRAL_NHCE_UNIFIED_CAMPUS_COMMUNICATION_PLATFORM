@@ -1,64 +1,11 @@
 const prisma = require("../config/db");
-
+const {handleAnnouncementPush} = require("../controllers/announcementPush.controller");
 /**
  * ============================
  * FACULTY: CREATE ANNOUNCEMENT
  * POST /announcements
  * ============================
  */
-// exports.createAnnouncement = async (req, res) => {
-//   try {
-//     const facultyId = req.user.id;
-//     const { title, description, priority, semester, uploadedFileId } = req.body;
-
-//     // Basic validation
-//     if (!title || !description || !priority) {
-//       return res.status(400).json({
-//         message: "Title, description, and priority are required",
-//       });
-//     }
-
-//     // Fetch faculty to derive department & program
-//     const faculty = await prisma.faculty.findUnique({
-//       where: { id: facultyId },
-//       include: {
-//         department: true,
-//       },
-//     });
-
-//     if (!faculty) {
-//       return res.status(404).json({
-//         message: "Faculty not found",
-//       });
-//     }
-
-//     // Create announcement
-//     const announcement = await prisma.announcement.create({
-//       data: {
-//         title,
-//         description,
-//         priority,
-//         semester: semester ?? null,
-
-//         facultyId,
-//         departmentId: faculty.departmentId,
-//         programId: faculty.department.programId,
-
-//         uploadedFileId: uploadedFileId ?? null
-//       },
-//     });
-
-//     return res.status(201).json({
-//       message: "Announcement created successfully",
-//       announcement,
-//     });
-//   } catch (error) {
-//     console.error("❌ Create announcement error:", error);
-//     return res.status(500).json({
-//       message: "Internal server error",
-//     });
-//   }
-// };
 exports.createAnnouncement = async (req, res) => {
   try {
     const facultyId = req.user.id;
@@ -79,7 +26,7 @@ exports.createAnnouncement = async (req, res) => {
       return res.status(404).json({ message: "Faculty not found" });
     }
 
-    // 1️⃣ Create announcement FIRST
+    // 1️⃣ Create announcement
     const announcement = await prisma.announcement.create({
       data: {
         title,
@@ -92,7 +39,7 @@ exports.createAnnouncement = async (req, res) => {
       },
     });
 
-    // 2️⃣ Link uploaded files (if any)
+    // 2️⃣ Link uploaded files
     if (fileIds.length > 0) {
       await prisma.uploadedFile.updateMany({
         where: {
@@ -103,6 +50,8 @@ exports.createAnnouncement = async (req, res) => {
         },
       });
     }
+
+    await handleAnnouncementPush(announcement.id);
 
     return res.status(201).json({
       message: "Announcement created successfully",
@@ -116,15 +65,12 @@ exports.createAnnouncement = async (req, res) => {
   }
 };
 
-
-
 /**
  * ============================
  * STUDENT: GET ANNOUNCEMENTS
  * GET /announcements
  * ============================
  */
-// 
 exports.getStudentAnnouncements = async (req, res) => {
   try {
     const studentId = req.user.id;
@@ -141,103 +87,45 @@ exports.getStudentAnnouncements = async (req, res) => {
       return res.status(404).json({ message: "Student not found" });
     }
 
-    // const [announcements, total] = await Promise.all([
-    //   prisma.announcement.findMany({
-    //     where: {
-    //       programId: student.programId,
-    //       departmentId: student.departmentId,
-    //       AND: [
-    //         {
-    //           OR: [
-    //             { semester: student.semester },
-    //             { semester: null },
-    //           ],
-    //         },
-    //         {
-    //           OR: [
-    //             { expiresAt: null },
-    //             { expiresAt: { gt: new Date() } },
-    //           ],
-    //         },
-    //       ],
-    //     },
-    //     orderBy: [
-    //       { priority: "desc" },
-    //       { createdAt: "desc" },
-    //     ],
-    //     skip,
-    //     take: limit,
-    //     include: {
-    //       faculty: { select: { name: true } },
-    //       uploadedFile: true,
-    //     },
-    //   }),
-
-    //   prisma.announcement.count({
-    //     where: {
-    //       programId: student.programId,
-    //       departmentId: student.departmentId,
-    //     },
-    //   }),
-    // ]);
-
-    exports.createAnnouncement = async (req, res) => {
-  try {
-    const facultyId = req.user.id;
-    const { title, description, priority, semester, fileIds = [] } = req.body;
-
-    if (!title || !description || !priority) {
-      return res.status(400).json({
-        message: "Title, description, and priority are required",
-      });
-    }
-
-    const faculty = await prisma.faculty.findUnique({
-      where: { id: facultyId },
-      include: { department: true },
-    });
-
-    if (!faculty) {
-      return res.status(404).json({ message: "Faculty not found" });
-    }
-
-    // 1️⃣ Create announcement FIRST
-    const announcement = await prisma.announcement.create({
-      data: {
-        title,
-        description,
-        priority,
-        semester: semester ?? null,
-        facultyId,
-        departmentId: faculty.departmentId,
-        programId: faculty.department.programId,
-      },
-    });
-
-    // 2️⃣ Link uploaded files (if any)
-    if (fileIds.length > 0) {
-      await prisma.uploadedFile.updateMany({
+    const [announcements, total] = await Promise.all([
+      prisma.announcement.findMany({
         where: {
-          id: { in: fileIds },
+          programId: student.programId,
+          departmentId: student.departmentId,
+          AND: [
+            {
+              OR: [
+                { semester: student.semester },
+                { semester: null },
+              ],
+            },
+            {
+              OR: [
+                { expiresAt: null },
+                { expiresAt: { gt: new Date() } },
+              ],
+            },
+          ],
         },
-        data: {
-          announcementId: announcement.id,
+        orderBy: [
+          { priority: "desc" },
+          { createdAt: "desc" },
+        ],
+        skip,
+        take: limit,
+        include: {
+          faculty: { select: { name: true } },
+          files: true,
         },
-      });
-    }
+      }),
 
-    return res.status(201).json({
-      message: "Announcement created successfully",
-      announcement,
-    });
-  } catch (error) {
-    console.error("❌ Create announcement error:", error);
-    return res.status(500).json({
-      message: "Internal server error",
-    });
-  }
-};
-
+      prisma.announcement.count({
+        where: {
+          programId: student.programId,
+          departmentId: student.departmentId,
+        },
+      }),
+    ]);
 
     return res.json({
       page,
@@ -247,17 +135,54 @@ exports.getStudentAnnouncements = async (req, res) => {
       announcements,
     });
   } catch (error) {
-    console.error("Fetch announcements error:", error);
+    console.error("Fetch student announcements error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
+/**
+ * ============================
+ * FACULTY: GET MY ANNOUNCEMENTS
+ * GET /announcements/mine
+ * ============================
+ */
+exports.getMyAnnouncements = async (req, res) => {
+  try {
+    const facultyId = req.user.id;
+
+    const announcements = await prisma.announcement.findMany({
+      where: {
+        facultyId,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      include: {
+        files: true,
+      },
+    });
+
+    res.json(announcements);
+  } catch (error) {
+    console.error("Fetch my announcements error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/**
+ * ============================
+ * FACULTY: UPDATE ANNOUNCEMENT
+ * PUT /announcements/:id
+ * ============================
+ */
 exports.updateAnnouncement = async (req, res) => {
   try {
     const facultyId = req.user.id;
     const { id } = req.params;
 
-    const existing = await prisma.announcement.findUnique({ where: { id } });
+    const existing = await prisma.announcement.findUnique({
+      where: { id },
+    });
 
     if (!existing) {
       return res.status(404).json({ message: "Announcement not found" });
@@ -279,12 +204,20 @@ exports.updateAnnouncement = async (req, res) => {
   }
 };
 
+/**
+ * ============================
+ * FACULTY: DELETE ANNOUNCEMENT
+ * DELETE /announcements/:id
+ * ============================
+ */
 exports.deleteAnnouncement = async (req, res) => {
   try {
     const facultyId = req.user.id;
     const { id } = req.params;
 
-    const announcement = await prisma.announcement.findUnique({ where: { id } });
+    const announcement = await prisma.announcement.findUnique({
+      where: { id },
+    });
 
     if (!announcement) {
       return res.status(404).json({ message: "Announcement not found" });
@@ -294,7 +227,9 @@ exports.deleteAnnouncement = async (req, res) => {
       return res.status(403).json({ message: "Unauthorized" });
     }
 
-    await prisma.announcement.delete({ where: { id } });
+    await prisma.announcement.delete({
+      where: { id },
+    });
 
     res.json({ message: "Announcement deleted" });
   } catch (error) {
@@ -302,4 +237,3 @@ exports.deleteAnnouncement = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-

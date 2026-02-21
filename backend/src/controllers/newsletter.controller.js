@@ -53,6 +53,36 @@ exports.createNewsletter = async (req, res) => {
 };
 
 /**
+ * ============================
+ * FACULTY: GET MY NEWSLETTERS
+ * GET /newsletters/mine
+ * ============================
+ */
+exports.getMyNewsletters = async (req, res) => {
+  try {
+    const facultyId = req.user.id;
+
+    const newsletters = await prisma.newsletter.findMany({
+      where: {
+        createdById: facultyId,
+      },
+      orderBy: [
+        { year: "desc" },
+        { month: "desc" },
+      ],
+      include: {
+        files: true,
+      },
+    });
+
+    res.json(newsletters);
+  } catch (error) {
+    console.error("Fetch my newsletters error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/**
  * STUDENT: GET NEWSLETTERS
  * GET /newsletters
  */
