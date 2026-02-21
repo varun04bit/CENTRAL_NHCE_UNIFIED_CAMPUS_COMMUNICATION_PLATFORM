@@ -28,3 +28,5 @@ Thumbs.db
 # Build outputs (if added later)
 dist/
 build/
+
+.expo/
