@@ -88,7 +88,7 @@ console.log(
       if (data.role === "FACULTY") {
   router.replace("/faculty");
 } else {
-  router.replace("/");
+  router.replace("/student");
 }
 
     } catch (error) {
