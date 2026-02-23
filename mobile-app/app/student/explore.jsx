@@ -3,51 +3,83 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  SafeAreaView,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+import { useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import NewsletterCard from "../../components/ui/NewsletterCard";
+
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 export default function ExploreScreen() {
   const insets = useSafeAreaInsets();
 
-  const newsletters = [
-    {
-      id: "1",
-      title: "Campus Monthly Newsletter",
-      description: "All events, placements & news for October.",
-      date: "Nov 1, 2024",
-      image: "https://picsum.photos/400/300",
-      fileUrl:
-        "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-    },
-    {
-      id: "2",
-      title: "Tech Club Special Edition",
-      description: "Highlights of Hackathon + AI Workshop.",
-      date: "Nov 5, 2024",
-      image: "https://picsum.photos/400/301",
-    },
-  ];
+  const [newsletters, setNewsletters] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchNewsletters();
+  }, []);
+
+  const fetchNewsletters = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+
+      const res = await fetch(`${API_BASE_URL}/newsletters`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch newsletters");
+      }
+
+      const json = await res.json();
+      setNewsletters(json || []);
+    } catch (error) {
+      console.error("Fetch newsletters error:", error);
+      Alert.alert("Error", "Unable to load newsletters");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <SafeAreaView
-      style={[
-        styles.container,
-        { paddingTop: insets.top + 10 }   // ✅ FIX
-      ]}
-    >
+    <SafeAreaView style={[styles.container, { paddingTop: insets.top + 10 }]}>
       <Text style={styles.title}>Newsletters</Text>
 
-      <FlatList
-        data={newsletters}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <NewsletterCard item={item} />}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingBottom: insets.bottom + 80,  // for tab bar
-        }}
-      />
+      {loading ? (
+        <ActivityIndicator
+          size="large"
+          color="#FFD700"
+          style={{ marginTop: 40 }}
+        />
+      ) : newsletters.length === 0 ? (
+        <Text style={styles.empty}>No newsletters available</Text>
+      ) : (
+        <FlatList
+          data={newsletters}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <NewsletterCard
+              item={{
+                ...item,
+                date: `${item.month}/${item.year}`,
+              }}
+            />
+          )}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{
+            paddingBottom: insets.bottom + 80,
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -64,5 +96,11 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: "bold",
     marginBottom: 20,
+  },
+
+  empty: {
+    color: "#94A3B8",
+    textAlign: "center",
+    marginTop: 60,
   },
 });

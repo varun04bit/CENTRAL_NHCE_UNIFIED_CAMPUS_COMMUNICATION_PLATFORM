@@ -55,7 +55,7 @@ export default function FacultyHome() {
 
           <Pressable
             style={styles.card}
-            onPress={() => router.push("/faculty/newsletters")}
+            onPress={() => router.push("/faculty/create-newsletter")}
           >
             <Ionicons name="newspaper-outline" size={22} color="#fff" />
             <Text style={styles.cardText}>Create Newsletter</Text>

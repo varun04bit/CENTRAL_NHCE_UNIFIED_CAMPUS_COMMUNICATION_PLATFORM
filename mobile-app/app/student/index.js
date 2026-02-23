@@ -5,42 +5,54 @@ import {
   FlatList,
   Alert,
   Pressable,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect, useState } from "react";
 import AnnouncementCard from "../../components/ui/AnnouncementCard";
+
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
 export default function StudentDashboard() {
   const router = useRouter();
 
-  const announcements = [
-    {
-      id: "1",
-      title: "Mid-Semester Exam Schedule Released",
-      description: "Check your exam schedule for November 2024.",
-      priority: "High",
-      category: "Academic",
-      date: "Nov 15, 2024",
-      timeAgo: "2 hours ago",
-      image: "https://picsum.photos/400/200",
-      fileUrl:
-        "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-    },
-    {
-      id: "2",
-      title: "Guest Lecture on AI & ML",
-      description: "Join us Friday 3PM in Auditorium.",
-      priority: "Medium",
-      category: "Event",
-      date: "Nov 18, 2024",
-      timeAgo: "5 hours ago",
-      image: "https://picsum.photos/400/201",
-    },
-  ];
+  const [announcements, setAnnouncements] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  /* ✅ LOGOUT FUNCTION */
+  useEffect(() => {
+    fetchAnnouncements();
+  }, []);
+
+  const fetchAnnouncements = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+
+      const res = await fetch(`${API_BASE_URL}/announcements`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch announcements");
+      }
+
+      const json = await res.json();
+
+      // ✅ API returns { announcements: [...] }
+      setAnnouncements(json.announcements || []);
+    } catch (error) {
+      console.error("Student announcements error:", error);
+      Alert.alert("Error", "Unable to load announcements");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ✅ LOGOUT */
   const handleLogout = () => {
     Alert.alert("Logout", "Are you sure you want to logout?", [
       { text: "Cancel", style: "cancel" },
@@ -66,12 +78,19 @@ export default function StudentDashboard() {
           </Text>
         </View>
 
-        {/* RIGHT ICONS */}
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-          <Ionicons name="notifications-outline" size={26} color="#FFD700" />
+          <Ionicons
+            name="notifications-outline"
+            size={26}
+            color="#FFD700"
+          />
 
           <Pressable onPress={handleLogout}>
-            <Ionicons name="log-out-outline" size={26} color="#FF6B6B" />
+            <Ionicons
+              name="log-out-outline"
+              size={26}
+              color="#FF6B6B"
+            />
           </Pressable>
         </View>
       </View>
@@ -79,6 +98,7 @@ export default function StudentDashboard() {
       {/* SECTION */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Recent Announcements</Text>
+
         <View style={styles.badge}>
           <Text style={{ color: "white" }}>
             {announcements.length} active
@@ -86,24 +106,37 @@ export default function StudentDashboard() {
         </View>
       </View>
 
-      {/* LIST */}
-      <FlatList
-        data={announcements}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 120 }}
-        renderItem={({ item }) => (
-          <AnnouncementCard
-            item={item}
-            onPress={() =>
-              router.push({
-                pathname: "/student/announcement-details",
-                params: { data: JSON.stringify(item) },
-              })
-            }
-          />
-        )}
-      />
+      {/* CONTENT */}
+      {loading ? (
+        <ActivityIndicator
+          size="large"
+          color="#FFD700"
+          style={{ marginTop: 40 }}
+        />
+      ) : announcements.length === 0 ? (
+        <Text style={styles.empty}>No announcements available</Text>
+      ) : (
+        <FlatList
+          data={announcements}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 120 }}
+          renderItem={({ item }) => (
+            <AnnouncementCard
+              item={{
+                ...item,
+                timeAgo: new Date(item.createdAt).toLocaleDateString(),
+              }}
+              onPress={() =>
+                router.push({
+                  pathname: "/student/announcement-details",
+                  params: { data: JSON.stringify(item) },
+                })
+              }
+            />
+          )}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -111,7 +144,7 @@ export default function StudentDashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000000",   // ✅ pure black
+    backgroundColor: "#000",
     paddingHorizontal: 16,
   },
 
@@ -123,7 +156,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    color: "#FFFFFF",
+    color: "#fff",
     fontSize: 28,
     fontWeight: "bold",
   },
@@ -139,7 +172,7 @@ const styles = StyleSheet.create({
   },
 
   sectionTitle: {
-    color: "#FFFFFF",
+    color: "#fff",
     fontSize: 18,
     fontWeight: "600",
   },
@@ -149,5 +182,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
+  },
+
+  empty: {
+    color: "#aaa",
+    textAlign: "center",
+    marginTop: 60,
   },
 });
