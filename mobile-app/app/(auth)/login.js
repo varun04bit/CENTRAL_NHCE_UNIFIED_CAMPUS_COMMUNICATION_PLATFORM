@@ -1,5 +1,3 @@
-
-
 import {
   View,
   Text,
@@ -8,6 +6,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  TextInput,
+  ActivityIndicator,
+  ImageBackground,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Link, useRouter } from "expo-router";
@@ -15,17 +16,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import GlassInput from "@/components/GlassInput";
-
-/* =========================
-      CONFIG
-========================= */
-
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
-
-/* =========================
-        LOGIN SCREEN
-========================= */
 
 export default function Login() {
   const router = useRouter();
@@ -33,15 +24,9 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-
-  /* =========================
-        LOGIN HANDLER
-  ========================= */
+  const [showPass, setShowPass] = useState(false);
 
   const handleLogin = async () => {
-      console.log("📱 LOGIN ATTEMPT");
-  console.log("📱 EMAIL:", email);
-  console.log("📱 PASSWORD:", password);
     if (!email || !password) {
       Alert.alert("Error", "Email and password are required");
       return;
@@ -58,41 +43,23 @@ export default function Login() {
 
       const data = await res.json();
 
-      console.log("📱 LOGIN RESPONSE STATUS:", res.status);
-console.log("📱 LOGIN RESPONSE DATA:", data);
-
-      // ❌ Handle error first
       if (!res.ok) {
         Alert.alert("Login Failed", data.message || "Invalid credentials");
         return;
       }
 
-      // ✅ Store token & role exactly from backend
       await AsyncStorage.setItem("token", data.token);
       await AsyncStorage.setItem("role", data.role);
 
-      console.log("📱 STORED ROLE:", data.role);
-console.log(
-  "📱 REQUIRES PASSWORD CHANGE:",
-  data.requiresPasswordChange
-);
-
-      // 🔐 Faculty first login → force password change
       if (data.role === "FACULTY" && data.requiresPasswordChange) {
         router.replace("/faculty/change-password");
         return;
       }
 
-      // ✅ Normal login (student or faculty)
-      // router.replace("/");
-      if (data.role === "FACULTY") {
-  router.replace("/faculty");
-} else {
-  router.replace("/student");
-}
+      if (data.role === "FACULTY") router.replace("/faculty");
+      else router.replace("/student");
 
-    } catch (error) {
-      console.error("Login error:", error);
+    } catch {
       Alert.alert("Error", "Something went wrong");
     } finally {
       setLoading(false);
@@ -100,160 +67,144 @@ console.log(
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <View style={styles.container}>
-          <View style={styles.content}>
-            {/* HEADER */}
-            <View style={styles.header}>
-              <Text style={styles.title}>Hey User! 👋</Text>
-              <Text style={styles.subtitle}>
-                Sign in to continue
-              </Text>
-            </View>
+    <ImageBackground
+      source={require("../../assets/images/bg-pattern.jpeg")}
+      resizeMode="cover"   // use "repeat" if pattern tile
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView style={styles.safe}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <View style={styles.container}>
+            <Text style={styles.title}>Welcome Back 👋</Text>
+            <Text style={styles.subtitle}>
+              Sign in to your Campus Connect account
+            </Text>
 
-            {/* FORM */}
-            <View style={styles.form}>
-              <Text style={styles.label}>EMAIL</Text>
-              <GlassInput
-                placeholder="name@campus.ac.in"
+            {/* EMAIL */}
+            <View style={styles.inputBox}>
+              <Ionicons name="mail-outline" size={20} color="#555" />
+              <TextInput
+                placeholder="Email"
+                placeholderTextColor="#666"
+                style={styles.input}
+                autoCapitalize="none"
                 value={email}
                 onChangeText={setEmail}
-                autoCapitalize="none"
-                rightIcon={
-                  <Ionicons
-                    name="mail-outline"
-                    size={18}
-                    color="rgba(255,255,255,0.55)"
-                  />
-                }
               />
-
-              <Text style={styles.label}>PASSWORD</Text>
-              <GlassInput
-  placeholder="Enter your password"
-  secureTextEntry
-  value={password}
-  onChangeText={setPassword}
-/>
-
-
-              <Text style={styles.forgot}>
-                Forgot password?
-              </Text>
-
-              {/* LOGIN BUTTON */}
-              <Pressable
-                style={[
-                  styles.loginBtn,
-                  loading && { opacity: 0.6 },
-                ]}
-                onPress={handleLogin}
-                disabled={loading}
-              >
-                <Text style={styles.loginText}>
-                  {loading ? "LOGGING IN..." : "LOGIN"}
-                </Text>
-              </Pressable>
-
-              {/* FOOTER */}
-              <Link href="/signup">
-                <Text style={styles.footer}>
-                  New here?{" "}
-                  <Text style={styles.link}>Sign up!</Text>
-                </Text>
-              </Link>
             </View>
+
+            {/* PASSWORD */}
+            <View style={styles.inputBox}>
+              <Ionicons name="lock-closed-outline" size={20} color="#555" />
+              <TextInput
+                placeholder="Password"
+                placeholderTextColor="#666"
+                style={styles.input}
+                secureTextEntry={!showPass}
+                value={password}
+                onChangeText={setPassword}
+              />
+              <Pressable onPress={() => setShowPass(!showPass)}>
+                <Ionicons
+                  name={showPass ? "eye-off-outline" : "eye-outline"}
+                  size={20}
+                  color="#555"
+                />
+              </Pressable>
+            </View>
+
+            {/* LOGIN BUTTON */}
+            <Pressable
+              style={[styles.loginBtn, loading && { opacity: 0.6 }]}
+              onPress={handleLogin}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#000" />
+              ) : (
+                <Text style={styles.loginText}>LOGIN</Text>
+              )}
+            </Pressable>
+
+            <Link href="/signup">
+              <Text style={styles.footer}>
+                New here? <Text style={styles.link}>Sign up</Text>
+              </Text>
+            </Link>
           </View>
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
-
-/* =========================
-            STYLES
-========================= */
 
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: "transparent",
   },
 
   container: {
-    flex: 1,
-    backgroundColor: "#000",
-  },
-
-  content: {
     flex: 1,
     justifyContent: "center",
     paddingHorizontal: 24,
   },
 
-  header: {
-    marginBottom: 34,
-  },
-
   title: {
-    fontFamily: "Inter-SemiBoldItalic",
-    fontSize: 55,
+    fontSize: 34,
     fontWeight: "800",
-    color: "#fff",
+    color: "#000",
+    marginBottom: 6,
   },
 
   subtitle: {
-    fontFamily: "Inter-Regular",
-    color: "rgba(255,255,255,0.65)",
-    fontSize: 18,
-    marginTop: 6,
+    color: "#333",
+    marginBottom: 30,
+    fontSize: 15,
   },
 
-  form: {
-    marginTop: 8,
+  inputBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#ffffffcc",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 14,
+    marginBottom: 14,
   },
 
-  label: {
-    color: "#888",
-    fontSize: 11,
-    letterSpacing: 0.8,
-    marginBottom: 6,
-    marginTop: 18,
-  },
-
-  forgot: {
-    color: "#aaa",
-    fontSize: 12,
-    textAlign: "right",
-    marginTop: 10,
+  input: {
+    flex: 1,
+    marginLeft: 10,
+    color: "#000",
+    fontSize: 15,
   },
 
   loginBtn: {
-    marginTop: 30,
-    backgroundColor: "#fff",
-    padding: 15,
+    marginTop: 20,
+    backgroundColor: "#FFD700",
+    padding: 16,
     borderRadius: 14,
+    alignItems: "center",
   },
 
   loginText: {
     color: "#000",
-    textAlign: "center",
     fontWeight: "700",
     fontSize: 16,
   },
 
   footer: {
-    color: "#aaa",
+    marginTop: 22,
     textAlign: "center",
-    marginTop: 28,
+    color: "#000",
   },
 
   link: {
-    color: "#fff",
+    color: "#006aff",
     fontWeight: "600",
   },
 });

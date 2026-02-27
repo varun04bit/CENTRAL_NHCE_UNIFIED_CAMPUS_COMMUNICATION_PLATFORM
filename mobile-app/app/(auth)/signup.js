@@ -6,92 +6,56 @@ import {
   Modal,
   FlatList,
   Alert,
+  TextInput,
+  ImageBackground,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import GlassInput from "@/components/GlassInput";
-import { BlurView } from "expo-blur";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
-/* =========================
-        SIGNUP SCREEN
-========================= */
-
 export default function Signup() {
   const router = useRouter();
 
-  // form state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [semester, setSemester] = useState("");
 
-  // dropdown data
   const [programs, setPrograms] = useState([]);
   const [departments, setDepartments] = useState([]);
 
-  // selected values
   const [program, setProgram] = useState(null);
   const [department, setDepartment] = useState(null);
 
-  // modals
   const [programModal, setProgramModal] = useState(false);
   const [deptModal, setDeptModal] = useState(false);
 
-  /* =========================
-      FETCH PROGRAMS
-  ========================= */
-
+  /* ---------- FETCH PROGRAMS ---------- */
   useEffect(() => {
-    const fetchPrograms = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/meta/programs`);
-        const data = await res.json();
-        setPrograms(data);
-      } catch (error) {
-        Alert.alert("Error", "Failed to load programs");
-      }
-    };
-
-    fetchPrograms();
+    fetch(`${API_BASE_URL}/meta/programs`)
+      .then(res => res.json())
+      .then(setPrograms)
+      .catch(() => Alert.alert("Error", "Failed to load programs"));
   }, []);
 
-  /* =========================
-      FETCH DEPARTMENTS
-  ========================= */
-
+  /* ---------- FETCH DEPARTMENTS ---------- */
   useEffect(() => {
     if (!program) return;
 
-    const fetchDepartments = async () => {
-      try {
-        const res = await fetch(
-          `${API_BASE_URL}/meta/departments/${program.id}`
-        );
-        const data = await res.json();
-        setDepartments(data);
-      } catch (error) {
-        Alert.alert("Error", "Failed to load departments");
-      }
-    };
-
-    fetchDepartments();
+    fetch(`${API_BASE_URL}/meta/departments/${program.id}`)
+      .then(res => res.json())
+      .then(setDepartments)
+      .catch(() => Alert.alert("Error", "Failed to load departments"));
   }, [program]);
 
-  /* =========================
-        SIGNUP HANDLER
-  ========================= */
-
+  /* ---------- SIGNUP ---------- */
   const handleSignup = async () => {
     if (!email || !password || !program || !department || !semester) {
-      Alert.alert("Error", "Please fill all fields");
-      return;
-    }
-
-    const sem = Number(semester);
-    if (isNaN(sem) || sem < 1 || sem > 8) {
-      Alert.alert("Error", "Semester must be between 1 and 8");
+      Alert.alert("Error", "Fill all fields");
       return;
     }
 
@@ -104,74 +68,73 @@ export default function Signup() {
           password,
           programId: program.id,
           departmentId: department.id,
-          semester: sem,
+          semester: Number(semester),
         }),
       });
 
-      const data = await res.json();
-
       if (!res.ok) {
-        Alert.alert("Signup Failed", data.message || "Signup failed");
+        Alert.alert("Signup Failed");
         return;
       }
 
-      Alert.alert("Success", "Account created successfully");
+      Alert.alert("Success", "Account created!");
       router.replace("/login");
-    } catch (error) {
-      console.error(error);
+    } catch {
       Alert.alert("Error", "Something went wrong");
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome!</Text>
-      <Text style={styles.subtitle}>Create an account to continue</Text>
+    <ImageBackground
+      source={require("../../assets/images/bg-pattern.jpeg")}
+      resizeMode="cover"
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView style={styles.safe}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <View style={styles.container}>
+            <Text style={styles.title}>Create Account ✨</Text>
+            <Text style={styles.subtitle}>
+              Join Campus Connect today
+            </Text>
 
-      <Text style={styles.label}>EMAIL</Text>
-      <GlassInput
-        value={email}
-        onChangeText={setEmail}
-        placeholder="name@campus.ac.in"
-      />
+            {/* EMAIL */}
+            <Input icon="mail-outline" value={email} onChange={setEmail} placeholder="Email" />
 
-      <Text style={styles.label}>PASSWORD</Text>
-      <GlassInput
-        placeholder="Create password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
+            {/* PASSWORD */}
+            <Input icon="lock-closed-outline" value={password} onChange={setPassword} placeholder="Password" secure />
 
-      <Text style={styles.label}>PROGRAM</Text>
-      <Dropdown
-        value={program?.name}
-        placeholder="Select program"
-        onPress={() => setProgramModal(true)}
-      />
+            {/* PROGRAM */}
+            <Dropdown
+              value={program?.name}
+              placeholder="Select Program"
+              onPress={() => setProgramModal(true)}
+            />
 
-      <Text style={styles.label}>DEPARTMENT</Text>
-      <Dropdown
-        value={department?.name}
-        placeholder="Select department"
-        onPress={() => setDeptModal(true)}
-        disabled={!program}
-      />
+            {/* DEPARTMENT */}
+            <Dropdown
+              value={department?.name}
+              placeholder="Select Department"
+              onPress={() => setDeptModal(true)}
+              disabled={!program}
+            />
 
-      <Text style={styles.label}>SEMESTER</Text>
-      <GlassInput
-        keyboardType="numeric"
-        value={semester}
-        onChangeText={setSemester}
-        placeholder="1 - 8"
-      />
+            {/* SEMESTER */}
+            <Input icon="school-outline" value={semester} onChange={setSemester} placeholder="Semester 1-8" />
 
-      <Pressable style={styles.signupBtn} onPress={handleSignup}>
-        <Text style={styles.signupText}>SIGN UP</Text>
-      </Pressable>
+            {/* BUTTON */}
+            <Pressable style={styles.signupBtn} onPress={handleSignup}>
+              <Text style={styles.signupText}>SIGN UP</Text>
+            </Pressable>
+          </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
 
       {/* PROGRAM MODAL */}
-      <GlassModal
+      <SelectModal
         visible={programModal}
         data={programs}
         onClose={() => setProgramModal(false)}
@@ -182,8 +145,8 @@ export default function Signup() {
         }}
       />
 
-      {/* DEPARTMENT MODAL */}
-      <GlassModal
+      {/* DEPT MODAL */}
+      <SelectModal
         visible={deptModal}
         data={departments}
         onClose={() => setDeptModal(false)}
@@ -192,132 +155,134 @@ export default function Signup() {
           setDeptModal(false);
         }}
       />
+    </ImageBackground>
+  );
+}
+
+/* ---------- INPUT ---------- */
+function Input({ icon, value, onChange, placeholder, secure }) {
+  return (
+    <View style={styles.inputBox}>
+      <Ionicons name={icon} size={20} color="#666" />
+      <TextInput
+        style={styles.input}
+        placeholder={placeholder}
+        placeholderTextColor="#888"
+        secureTextEntry={secure}
+        value={value}
+        onChangeText={onChange}
+      />
     </View>
   );
 }
 
-/* =========================
-        REUSABLE UI
-========================= */
-
+/* ---------- DROPDOWN ---------- */
 function Dropdown({ value, placeholder, onPress, disabled }) {
   return (
     <Pressable
-      style={[styles.glassRow, disabled && { opacity: 0.5 }]}
+      style={[styles.inputBox, disabled && { opacity: 0.4 }]}
       onPress={onPress}
       disabled={disabled}
     >
-      <BlurView
-        intensity={25}
-        tint="light"
-        style={StyleSheet.absoluteFill}
-        pointerEvents="none"
-      />
-      <Text style={styles.valueText}>{value || placeholder}</Text>
-      <Ionicons name="chevron-down" size={18} color="#ddd" />
+      <Text style={{ flex: 1, color: value ? "#000" : "#888" }}>
+        {value || placeholder}
+      </Text>
+      <Ionicons name="chevron-down" size={20} color="#666" />
     </Pressable>
   );
 }
 
-function GlassModal({ visible, data, onClose, onSelect }) {
+/* ---------- MODAL ---------- */
+function SelectModal({ visible, data, onClose, onSelect }) {
   return (
     <Modal transparent visible={visible} animationType="fade">
-      <BlurView
-        intensity={100}
-        tint="dark"
-        style={StyleSheet.absoluteFill}
-        pointerEvents="none"
-      />
       <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable style={styles.modal}>
+        <View style={styles.modal}>
           <FlatList
             data={data}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
               <Pressable
                 style={styles.option}
                 onPress={() => onSelect(item)}
               >
-                <Text style={styles.optionText}>{item.name}</Text>
+                <Text style={{ color: "#000" }}>{item.name}</Text>
               </Pressable>
             )}
           />
-        </Pressable>
+        </View>
       </Pressable>
     </Modal>
   );
 }
 
-/* =========================
-            STYLES
-========================= */
-
+/* ---------- STYLES ---------- */
 const styles = StyleSheet.create({
+  safe: { flex: 1 },
+
   container: {
     flex: 1,
-    backgroundColor: "#0b0f14",
-    padding: 24,
     justifyContent: "center",
+    padding: 24,
   },
+
   title: {
-    fontSize: 40,
-    fontWeight: "700",
-    color: "#fff",
+    fontSize: 34,
+    fontWeight: "800",
+    color: "#000",
   },
+
   subtitle: {
-    fontSize: 16,
-    color: "#aaa",
-    marginBottom: 24,
+    color: "#333",
+    marginBottom: 25,
   },
-  label: {
-    color: "#888",
-    fontSize: 12,
-    marginTop: 16,
-    marginBottom: 6,
-  },
-  glassRow: {
-    height: 54,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "rgba(160,200,255,0.28)",
-    paddingHorizontal: 18,
+
+  inputBox: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 8,
+    backgroundColor: "#ffffffcc",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 14,
+    marginBottom: 14,
   },
-  valueText: {
-    color: "#fff",
-    fontSize: 15,
+
+  input: {
+    flex: 1,
+    marginLeft: 10,
+    color: "#000",
   },
+
   signupBtn: {
-    marginTop: 32,
-    backgroundColor: "#fff",
-    paddingVertical: 16,
-    borderRadius: 16,
+    marginTop: 20,
+    backgroundColor: "#FFD700",
+    padding: 16,
+    borderRadius: 14,
+    alignItems: "center",
   },
+
   signupText: {
     color: "#000",
-    textAlign: "center",
     fontWeight: "700",
     fontSize: 16,
   },
+
   overlay: {
     flex: 1,
+    backgroundColor: "rgba(0,0,0,0.3)",
     justifyContent: "center",
     padding: 24,
   },
+
   modal: {
-    backgroundColor: "#413e3e",
-    borderRadius: 18,
+    backgroundColor: "#fff",
+    borderRadius: 16,
     maxHeight: "65%",
   },
+
   option: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.12)",
-  },
-  optionText: {
-    color: "#fff",
+    borderColor: "#eee",
   },
 });

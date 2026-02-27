@@ -7,7 +7,9 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
+  ImageBackground,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useState } from "react";
 import * as DocumentPicker from "expo-document-picker";
 import { uploadFiles } from "../../services/upload.service";
@@ -18,33 +20,27 @@ export default function CreateAnnouncement() {
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("INFO");
   const [semester, setSemester] = useState("");
-  const [files, setFiles] = useState<any[]>([]);
+  const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const pickFiles = async () => {
-    const result = await DocumentPicker.getDocumentAsync({
-      multiple: true,
-    });
-
-    if (!result.canceled) {
-      setFiles(result.assets);
-    }
+    const result = await DocumentPicker.getDocumentAsync({ multiple: true });
+    if (!result.canceled) setFiles(result.assets);
   };
 
   const handleSubmit = async () => {
-    if (!title || !description || !priority) {
-      Alert.alert("Error", "Title, description, and priority are required");
+    if (!title || !description) {
+      Alert.alert("Error", "Title & description required");
       return;
     }
 
     try {
       setLoading(true);
 
-      let fileIds: string[] = [];
-
+      let fileIds = [];
       if (files.length > 0) {
         const uploaded = await uploadFiles(files);
-        fileIds = uploaded.map((f: any) => f.id);
+        fileIds = uploaded.map((f) => f.id);
       }
 
       await createAnnouncement({
@@ -55,177 +51,184 @@ export default function CreateAnnouncement() {
         fileIds,
       });
 
-      Alert.alert("Success", "Announcement created successfully");
-
+      Alert.alert("Success", "Announcement created!");
       setTitle("");
       setDescription("");
       setSemester("");
       setFiles([]);
-    } catch (err: any) {
-      Alert.alert("Error", err.message || "Something went wrong");
+    } catch (err) {
+      Alert.alert("Error", "Something went wrong");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.heading}>Create Announcement</Text>
-
-      <TextInput
-        placeholder="Title"
-        placeholderTextColor="#888"
-        style={styles.input}
-        value={title}
-        onChangeText={setTitle}
-      />
-
-      <TextInput
-        placeholder="Description"
-        placeholderTextColor="#888"
-        style={[styles.input, { height: 100 }]}
-        multiline
-        value={description}
-        onChangeText={setDescription}
-      />
-
-     
-      <Text style={styles.label}>Priority</Text>
-
-{["PINNED", "HIGH", "INFO"].map((p) => {
-  const isSelected = priority === p;
-
-  const getColor = () => {
-    if (p === "PINNED") return "#facc15";
-    if (p === "HIGH") return "#ef4444";
-    return "#3b82f6";
-  };
-
-  return (
-    <Pressable
-      key={p}
-      onPress={() => setPriority(p)}
-      style={[
-        styles.priorityButton,
-        isSelected && {
-          borderColor: getColor(),
-          borderWidth: 2,
-        },
-      ]}
+    <ImageBackground
+      source={require("../../assets/images/bg-pattern.jpeg")}
+      resizeMode="cover"
+      style={{ flex: 1 }}
     >
-      <Text
-        style={[
-          styles.priorityText,
-          isSelected && { color: getColor(), fontWeight: "700" },
-        ]}
-      >
-        {p}
-      </Text>
-    </Pressable>
-  );
-})}
+      <SafeAreaView style={{ flex: 1 }}>
+        <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+          
+          <Text style={styles.heading}>Create Announcement</Text>
+          <Text style={styles.subheading}>
+            Post updates for students quickly & easily
+          </Text>
 
-      <TextInput
-        placeholder="Semester (optional)"
-        placeholderTextColor="#888"
-        style={styles.input}
-        keyboardType="numeric"
-        value={semester}
-        onChangeText={setSemester}
-      />
+          {/* TITLE */}
+          <TextInput
+            placeholder="Title"
+            placeholderTextColor="#888"
+            style={styles.input}
+            value={title}
+            onChangeText={setTitle}
+          />
 
-      <Pressable style={styles.fileButton} onPress={pickFiles}>
-        <Text style={{ color: "#fff" }}>Select Files</Text>
-      </Pressable>
-       
-        {files.length > 0 && (
-  <View style={{ marginBottom: 16 }}>
-    {files.map((file, index) => (
-      <Pressable
-        key={index}
-        onPress={() =>
-          setFiles(files.filter((_, i) => i !== index))
-        }
-        style={{
-          marginBottom: 6,
-          flexDirection: "row",
-          justifyContent: "space-between",
-        }}
-      >
-        <Text style={{ color: "#aaa", fontSize: 12 }}>
-          📎 {file.name}
-        </Text>
+          {/* DESCRIPTION */}
+          <TextInput
+            placeholder="Description"
+            placeholderTextColor="#888"
+            style={[styles.input, { height: 120 }]}
+            multiline
+            value={description}
+            onChangeText={setDescription}
+          />
 
-        <Text style={{ color: "#ef4444", fontSize: 12 }}>
-          Remove
-        </Text>
-      </Pressable>
-    ))}
-  </View>
-)}
-      <Pressable style={styles.submit} onPress={handleSubmit}>
-        {loading ? (
-          <ActivityIndicator color="#000" />
-        ) : (
-          <Text style={{ fontWeight: "700" }}>Submit</Text>
-        )}
-      </Pressable>
-    </ScrollView>
+          {/* PRIORITY */}
+          <Text style={styles.label}>Priority</Text>
+
+          {["PINNED", "HIGH", "INFO"].map((p) => (
+            <Pressable
+              key={p}
+              onPress={() => setPriority(p)}
+              style={[
+                styles.priorityButton,
+                priority === p && styles.prioritySelected,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.priorityText,
+                  priority === p && { color: "#FFD700" },
+                ]}
+              >
+                {p}
+              </Text>
+            </Pressable>
+          ))}
+
+          {/* SEMESTER */}
+          <TextInput
+            placeholder="Semester (optional)"
+            placeholderTextColor="#888"
+            style={styles.input}
+            keyboardType="numeric"
+            value={semester}
+            onChangeText={setSemester}
+          />
+
+          {/* FILES */}
+          <Pressable style={styles.fileButton} onPress={pickFiles}>
+            <Text style={{ fontWeight: "600" }}>Select Files</Text>
+          </Pressable>
+
+          {files.length > 0 &&
+            files.map((file, i) => (
+              <Pressable
+                key={i}
+                onPress={() => setFiles(files.filter((_, j) => j !== i))}
+                style={styles.fileItem}
+              >
+                <Text>📎 {file.name}</Text>
+                <Text style={{ color: "#ef4444" }}>Remove</Text>
+              </Pressable>
+            ))}
+
+          {/* SUBMIT */}
+          <Pressable style={styles.submit} onPress={handleSubmit}>
+            {loading ? (
+              <ActivityIndicator color="#000" />
+            ) : (
+              <Text style={{ fontWeight: "700" }}>Submit</Text>
+            )}
+          </Pressable>
+
+        </ScrollView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#000",
-    padding: 20,
-  },
+  container: { flex: 1, padding: 20 },
+
   heading: {
-    fontSize: 28,
-    color: "#fff",
-    marginBottom: 20,
-  },
-  input: {
-    backgroundColor: "rgba(255,255,255,0.1)",
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 14,
-    color: "#fff",
-  },
-  label: {
-    color: "#aaa",
+    fontSize: 34,
+    fontWeight: "800",
+    color: "#000",
     marginBottom: 6,
   },
-  // priorityButton: {
-  //   padding: 12,
-  //   borderRadius: 10,
-  //   marginBottom: 10,
-  //   backgroundColor: "rgba(255,255,255,0.06)",
-  // },
-  priorityButton: {
-  padding: 12,
-  borderRadius: 10,
-  marginBottom: 10,
-  backgroundColor: "rgba(255,255,255,0.06)",
-  borderWidth: 1,
-  borderColor: "rgba(255,255,255,0.1)",
-},
-  // prioritySelected: {
-  //   backgroundColor: "#fff",
-  // },
-  priorityText: {
-    color: "#fff",
+
+  subheading: {
+    color: "#444",
+    fontSize: 15,
+    marginBottom: 24,
   },
-  fileButton: {
-    backgroundColor: "rgba(255,255,255,0.08)",
+
+  input: {
+    backgroundColor: "#ffffffcc",
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+    fontSize: 15,
+  },
+
+  label: {
+    color: "#444",
+    marginBottom: 8,
+    fontSize: 13,
+  },
+
+  priorityButton: {
     padding: 14,
     borderRadius: 12,
-    marginBottom: 20,
+    marginBottom: 10,
+    backgroundColor: "#ffffffcc",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
   },
-  submit: {
-    backgroundColor: "#fff",
+
+  prioritySelected: {
+    borderColor: "#FFD700",
+    borderWidth: 2,
+  },
+
+  priorityText: {
+    fontSize: 15,
+    color: "#000",
+  },
+
+  fileButton: {
+    backgroundColor: "#FFD700",
     padding: 16,
     borderRadius: 14,
+    marginBottom: 20,
     alignItems: "center",
+  },
+
+  fileItem: {
+    marginBottom: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+
+  submit: {
+    backgroundColor: "#FFD700",
+    padding: 18,
+    borderRadius: 16,
+    alignItems: "center",
+    marginBottom: 40,
   },
 });

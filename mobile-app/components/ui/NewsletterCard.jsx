@@ -3,26 +3,20 @@ import {
   Text,
   StyleSheet,
   Pressable,
-  Image,
   Linking,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 export default function NewsletterCard({ item }) {
 
-  const openFile = () => {
-    if (item.fileUrl || item.image) {
-      Linking.openURL(item.fileUrl || item.image);
+  const openNewsletter = () => {
+    if (item.fileUrl) {
+      Linking.openURL(item.fileUrl);
     }
   };
 
   return (
-    <Pressable style={styles.card} onPress={openFile}>
-
-      {/* IMAGE */}
-      {item.image && (
-        <Image source={{ uri: item.image }} style={styles.image} />
-      )}
+    <Pressable style={styles.card} onPress={openNewsletter}>
 
       {/* TITLE */}
       <Text style={styles.title}>{item.title}</Text>
@@ -36,8 +30,8 @@ export default function NewsletterCard({ item }) {
 
         <Ionicons
           name="download-outline"
-          size={20}
-          color="#94A3B8"
+          size={22}
+          color="#64748B"
         />
       </View>
 
@@ -47,36 +41,40 @@ export default function NewsletterCard({ item }) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#0F172A",
+    backgroundColor: "#ffffff",
     padding: 18,
-    borderRadius: 18,
+    borderRadius: 20,
     marginBottom: 16,
+
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
     elevation: 4,
   },
 
-  image: {
-    width: "100%",
-    height: 170,
-    borderRadius: 14,
-    marginBottom: 10,
-  },
-
   title: {
-    color: "white",
+    color: "#0F172A",
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: "700",
     marginBottom: 6,
   },
 
   desc: {
-    color: "#94A3B8",
-    marginBottom: 10,
+    color: "#475569",
+    marginBottom: 12,
   },
 
   footer: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
   },
 
-  date: { color: "#64748B" },
+  date: {
+    color: "#64748B",
+  },
 });

@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Image,
   Linking,
+  ImageBackground,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -37,7 +38,6 @@ export default function MyAnnouncements() {
       const json = await res.json();
       setData(json);
     } catch (error) {
-      console.error("Fetch announcements error:", error);
       Alert.alert("Error", "Failed to load announcements");
     } finally {
       setLoading(false);
@@ -67,136 +67,159 @@ export default function MyAnnouncements() {
   if (loading) {
     return (
       <View style={styles.loader}>
-        <ActivityIndicator color="#fff" />
+        <ActivityIndicator size="large" color="#FFD700" />
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <FlatList
-        data={data}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.list}
-        ListHeaderComponent={
-          <Text style={styles.title}>My Announcements</Text>
-        }
-        ListEmptyComponent={
-          <Text style={styles.empty}>No announcements yet</Text>
-        }
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>{item.title}</Text>
-            <Text style={styles.desc}>{item.description}</Text>
+    <ImageBackground
+      source={require("../../assets/images/bg-pattern.jpeg")}
+      resizeMode="cover"
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView style={styles.safe}>
+        <FlatList
+          data={data}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.list}
+          ListHeaderComponent={
+            <Text style={styles.title}>My Announcements</Text>
+          }
+          ListEmptyComponent={
+            <Text style={styles.empty}>No announcements yet</Text>
+          }
+          renderItem={({ item }) => (
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>{item.title}</Text>
+              <Text style={styles.desc}>{item.description}</Text>
 
-            {/* FILE PREVIEW */}
-            {item.files?.length > 0 && (
-              <View style={styles.files}>
-                {item.files.map((file) => {
-                  if (file.mimeType.startsWith("image/")) {
+              {/* FILE PREVIEW */}
+              {item.files?.length > 0 && (
+                <View style={styles.files}>
+                  {item.files.map((file) => {
+                    const url = file.url.startsWith("http")
+                      ? file.url
+                      : `${API_BASE_URL}/${file.url}`;
+
+                    if (file.mimeType?.startsWith("image/")) {
+                      return (
+                        <Pressable
+                          key={file.id}
+                          onPress={() => Linking.openURL(url)}
+                        >
+                          <Image source={{ uri: url }} style={styles.image} />
+                        </Pressable>
+                      );
+                    }
+
                     return (
                       <Pressable
                         key={file.id}
-                        onPress={() => Linking.openURL(file.url)}
+                        style={styles.fileRow}
+                        onPress={() => Linking.openURL(url)}
                       >
-                        <Image
-                          source={{ uri: file.url }}
-                          style={styles.image}
+                        <Ionicons
+                          name="document-outline"
+                          size={18}
+                          color="#FFD700"
                         />
+                        <Text style={styles.fileText}>Open attachment</Text>
                       </Pressable>
                     );
-                  }
+                  })}
+                </View>
+              )}
 
-                  return (
-                    <Pressable
-                      key={file.id}
-                      style={styles.fileRow}
-                      onPress={() => Linking.openURL(file.url)}
-                    >
-                      <Ionicons
-                        name="document-outline"
-                        size={18}
-                        color="#fff"
-                      />
-                      <Text style={styles.fileText}>Open attachment</Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            )}
+              {/* ACTIONS */}
+              <View style={styles.row}>
+                <Text style={styles.meta}>
+                  Priority: {item.priority}
+                </Text>
 
-            <View style={styles.row}>
-              <Text style={styles.meta}>Priority: {item.priority}</Text>
+                <View style={styles.actions}>
+                  <Pressable
+                    onPress={() =>
+                      router.push(`/faculty/edit-announcement/${item.id}`)
+                    }
+                  >
+                    <Ionicons name="pencil-outline" size={20} color="#FFD700" />
+                  </Pressable>
 
-              <View style={styles.actions}>
-                <Pressable
-                  onPress={() =>
-                    router.push(`/faculty/edit-announcement/${item.id}`)
-                  }
-                >
-                  <Ionicons name="pencil-outline" size={18} color="#fff" />
-                </Pressable>
-
-                <Pressable onPress={() => handleDelete(item.id)}>
-                  <Ionicons name="trash-outline" size={18} color="#ff5c5c" />
-                </Pressable>
+                  <Pressable onPress={() => handleDelete(item.id)}>
+                    <Ionicons name="trash-outline" size={20} color="#FF4D4D" />
+                  </Pressable>
+                </View>
               </View>
             </View>
-          </View>
-        )}
-      />
-    </SafeAreaView>
+          )}
+        />
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#000" },
+  safe: { flex: 1 },
+
   loader: {
     flex: 1,
-    backgroundColor: "#000",
     justifyContent: "center",
     alignItems: "center",
   },
+
   list: { padding: 20 },
+
   title: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#fff",
+    fontSize: 30,
+    fontWeight: "800",
+    color: "#000",
     marginBottom: 20,
   },
+
   empty: {
-    color: "#aaa",
+    color: "#666",
     textAlign: "center",
     marginTop: 40,
   },
+
   card: {
-    backgroundColor: "rgba(255,255,255,0.06)",
-    borderRadius: 16,
+    backgroundColor: "#ffffffdd",
+    borderRadius: 18,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
+    borderColor: "#e5e7eb",
   },
-  cardTitle: { color: "#fff", fontSize: 16, fontWeight: "600" },
-  desc: { color: "rgba(255,255,255,0.65)", marginTop: 6 },
 
-  files: {
-    marginTop: 12,
-    gap: 10,
+  cardTitle: {
+    color: "#000",
+    fontSize: 17,
+    fontWeight: "700",
   },
+
+  desc: {
+    color: "#444",
+    marginTop: 6,
+  },
+
+  files: { marginTop: 12, gap: 10 },
+
   image: {
     width: "100%",
     height: 180,
     borderRadius: 12,
   },
+
   fileRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
     paddingVertical: 6,
   },
+
   fileText: {
-    color: "#fff",
+    color: "#000",
     fontSize: 13,
   },
 
@@ -206,6 +229,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  meta: { color: "#aaa", fontSize: 12 },
+
+  meta: { color: "#666", fontSize: 12 },
+
   actions: { flexDirection: "row", gap: 16 },
 });

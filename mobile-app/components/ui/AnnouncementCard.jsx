@@ -19,36 +19,22 @@ export default function AnnouncementCard({ item }) {
   return (
     <Pressable style={styles.card} onPress={openAttachment}>
 
-      {/* BADGES */}
       <View style={styles.badgeRow}>
-        <View style={[styles.priority, getPriority(item.priority)]}>
-          <Text style={styles.badgeText}>{item.priority}</Text>
-        </View>
-
-        <View style={styles.category}>
-          <Text style={styles.badgeText}>{item.category}</Text>
-        </View>
-
-        <Ionicons
-          name="chevron-forward"
-          size={20}
-          color="#94A3B8"
-          style={{ marginLeft: "auto" }}
-        />
+        <Text style={styles.title}>{item.title}</Text>
+        <Ionicons name="chevron-forward" size={20} color="#94A3B8" style={{ marginLeft: "auto" }} />
       </View>
 
-      {/* IMAGE PREVIEW */}
       {item.image && (
-        <Image source={{ uri: item.image }} style={styles.image} />
+        <Image
+          source={{ uri: item.image }}
+          style={styles.image}
+          resizeMode="cover"
+          onError={() => console.log("Image failed:", item.image)}
+        />
       )}
 
-      {/* TITLE */}
-      <Text style={styles.title}>{item.title}</Text>
-
-      {/* DESCRIPTION */}
       <Text style={styles.desc}>{item.description}</Text>
 
-      {/* FOOTER */}
       <View style={styles.footer}>
         <Text style={styles.date}>📅 {item.date}</Text>
         <Text style={styles.time}>{item.timeAgo}</Text>
@@ -58,20 +44,18 @@ export default function AnnouncementCard({ item }) {
   );
 }
 
-/* ---------- PRIORITY COLORS ---------- */
-function getPriority(p) {
-  if (p === "High") return { backgroundColor: "#5A1B1B" };
-  if (p === "Medium") return { backgroundColor: "#5A4A1B" };
-  return { backgroundColor: "#1E293B" };
-}
-
-/* ---------- STYLES ---------- */
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#0B1120",
+    backgroundColor: "#ffffff",
     padding: 18,
-    borderRadius: 18,
+    borderRadius: 20,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
     elevation: 4,
   },
 
@@ -80,39 +64,23 @@ const styles = StyleSheet.create({
     height: 170,
     borderRadius: 14,
     marginBottom: 10,
+    backgroundColor: "#ddd",
   },
 
   badgeRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
     marginBottom: 10,
   },
 
-  priority: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-
-  category: {
-    backgroundColor: "#1E293B",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-
-  badgeText: { color: "#E2E8F0", fontSize: 12 },
-
   title: {
-    color: "white",
+    color: "#0F172A",
     fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 6,
+    fontWeight: "700",
   },
 
   desc: {
-    color: "#94A3B8",
+    color: "#475569",
     marginBottom: 10,
   },
 

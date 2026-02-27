@@ -6,13 +6,15 @@ import {
   Alert,
   Pressable,
   ActivityIndicator,
+  ImageBackground,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 import AnnouncementCard from "../../components/ui/AnnouncementCard";
+import ProfileAvatar from "../../components/ui/ProfileAvatar";
+import ProfileSheet from "../../components/ui/ProfileSheet";
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
 
@@ -21,6 +23,7 @@ export default function StudentDashboard() {
 
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   useEffect(() => {
     fetchAnnouncements();
@@ -31,161 +34,147 @@ export default function StudentDashboard() {
       const token = await AsyncStorage.getItem("token");
 
       const res = await fetch(`${API_BASE_URL}/announcements`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to fetch announcements");
-      }
+      if (!res.ok) throw new Error("Failed to fetch announcements");
 
       const json = await res.json();
-
-      // ✅ API returns { announcements: [...] }
       setAnnouncements(json.announcements || []);
     } catch (error) {
-      console.error("Student announcements error:", error);
       Alert.alert("Error", "Unable to load announcements");
     } finally {
       setLoading(false);
     }
   };
 
-  /* ✅ LOGOUT */
-  const handleLogout = () => {
-    Alert.alert("Logout", "Are you sure you want to logout?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Logout",
-        style: "destructive",
-        onPress: async () => {
-          await AsyncStorage.removeItem("token");
-          router.replace("/login");
-        },
-      },
-    ]);
+  const handleLogout = async () => {
+    await AsyncStorage.removeItem("token");
+    setProfileOpen(false);
+    router.replace("/login");
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
-      {/* HEADER */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.title}>Campus Connect</Text>
-          <Text style={styles.subtitle}>
-            Stay updated with campus happenings
-          </Text>
-        </View>
+    <ImageBackground
+      source={require("../../assets/images/bg-pattern.jpeg")}
+      resizeMode="cover"
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
+        
+        {/* HEADER */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.title}>Campus Connect</Text>
+            <Text style={styles.subtitle}>
+              Stay updated with campus happenings
+            </Text>
+          </View>
 
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-          <Ionicons
-            name="notifications-outline"
-            size={26}
-            color="#FFD700"
-          />
-
-          <Pressable onPress={handleLogout}>
-            <Ionicons
-              name="log-out-outline"
-              size={26}
-              color="#FF6B6B"
-            />
+          <Pressable onPress={() => setProfileOpen(true)}>
+            <ProfileAvatar size={38} />
           </Pressable>
         </View>
-      </View>
 
-      {/* SECTION */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Recent Announcements</Text>
+        {/* SECTION */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Recent Announcements</Text>
 
-        <View style={styles.badge}>
-          <Text style={{ color: "white" }}>
-            {announcements.length} active
-          </Text>
+          <View style={styles.badge}>
+            <Text style={{ color: "white" }}>
+              {announcements.length} active
+            </Text>
+          </View>
         </View>
-      </View>
 
-      {/* CONTENT */}
-      {loading ? (
-        <ActivityIndicator
-          size="large"
-          color="#FFD700"
-          style={{ marginTop: 40 }}
+        {/* CONTENT */}
+        {loading ? (
+          <ActivityIndicator size="large" color="#FFD700" style={{ marginTop: 40 }} />
+        ) : announcements.length === 0 ? (
+          <Text style={styles.empty}>No announcements available</Text>
+        ) : (
+          <FlatList
+            data={announcements}
+            keyExtractor={(item) => item.id.toString()}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 120 }}
+            renderItem={({ item }) => (
+              <AnnouncementCard
+                item={{
+                  ...item,
+                  image: item.image
+                    ? item.image.startsWith("http")
+                      ? item.image
+                      : `${API_BASE_URL}/${item.image}`
+                    : null,
+                  fileUrl: item.fileUrl
+                    ? item.fileUrl.startsWith("http")
+                      ? item.fileUrl
+                      : `${API_BASE_URL}/${item.fileUrl}`
+                    : null,
+                  timeAgo: new Date(item.createdAt).toLocaleDateString(),
+                }}
+              />
+            )}
+          />
+        )}
+
+        {/* PROFILE SHEET */}
+        <ProfileSheet
+          visible={profileOpen}
+          onClose={() => setProfileOpen(false)}
+          email={"student@email.com"}
+          onLogout={handleLogout}
         />
-      ) : announcements.length === 0 ? (
-        <Text style={styles.empty}>No announcements available</Text>
-      ) : (
-        <FlatList
-          data={announcements}
-          keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 120 }}
-          renderItem={({ item }) => (
-            <AnnouncementCard
-              item={{
-                ...item,
-                timeAgo: new Date(item.createdAt).toLocaleDateString(),
-              }}
-              onPress={() =>
-                router.push({
-                  pathname: "/student/announcement-details",
-                  params: { data: JSON.stringify(item) },
-                })
-              }
-            />
-          )}
-        />
-      )}
-    </SafeAreaView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
     paddingHorizontal: 16,
   },
 
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     marginTop: 10,
     marginBottom: 20,
   },
 
   title: {
-    color: "#fff",
+    color: "#000",
     fontSize: 28,
     fontWeight: "bold",
   },
 
-  subtitle: {
-    color: "#A1A1AA",
-  },
+  subtitle: { color: "#333" },
 
   section: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 15,
+    alignItems: "center",
   },
 
   sectionTitle: {
-    color: "#fff",
+    color: "#000",
     fontSize: 18,
     fontWeight: "600",
   },
 
   badge: {
-    backgroundColor: "#1F2937",
+    backgroundColor: "#006aff",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
   },
 
   empty: {
-    color: "#aaa",
+    color: "#000",
     textAlign: "center",
     marginTop: 60,
   },

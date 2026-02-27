@@ -6,6 +6,7 @@ import {
   Pressable,
   Alert,
   ActivityIndicator,
+  ImageBackground,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -38,7 +39,7 @@ export default function EditNewsletter() {
       });
 
       const data = await res.json();
-      const newsletter = data.find((n) => n.id === id);
+      const newsletter = data.find((n) => n.id.toString() === id);
 
       if (!newsletter) {
         Alert.alert("Error", "Newsletter not found");
@@ -51,7 +52,6 @@ export default function EditNewsletter() {
       setMonth(String(newsletter.month));
       setYear(String(newsletter.year));
     } catch (error) {
-      console.error("Load newsletter error:", error);
       Alert.alert("Error", "Failed to load newsletter");
     } finally {
       setLoading(false);
@@ -82,15 +82,11 @@ export default function EditNewsletter() {
         }),
       });
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Update failed");
-      }
+      if (!res.ok) throw new Error("Update failed");
 
       Alert.alert("Success", "Newsletter updated successfully");
       router.back();
     } catch (error) {
-      console.error("Update newsletter error:", error);
       Alert.alert("Error", error.message);
     } finally {
       setSaving(false);
@@ -100,115 +96,128 @@ export default function EditNewsletter() {
   if (loading) {
     return (
       <View style={styles.loader}>
-        <ActivityIndicator color="#fff" />
+        <ActivityIndicator size="large" color="#FFD700" />
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.container}>
-        <Text style={styles.title}>Edit Newsletter</Text>
-
-        <TextInput
-          style={styles.input}
-          value={title}
-          onChangeText={setTitle}
-          placeholder="Title"
-          placeholderTextColor="#777"
-        />
-
-        <TextInput
-          style={[styles.input, styles.textarea]}
-          value={description}
-          onChangeText={setDescription}
-          placeholder="Description (optional)"
-          placeholderTextColor="#777"
-          multiline
-        />
-
-        <View style={styles.row}>
-          <TextInput
-            style={[styles.input, styles.smallInput]}
-            value={month}
-            onChangeText={setMonth}
-            placeholder="MM"
-            placeholderTextColor="#777"
-            keyboardType="numeric"
-          />
-
-          <TextInput
-            style={[styles.input, styles.smallInput]}
-            value={year}
-            onChangeText={setYear}
-            placeholder="YYYY"
-            placeholderTextColor="#777"
-            keyboardType="numeric"
-          />
-        </View>
-
-        <Pressable
-          style={[styles.btn, saving && { opacity: 0.6 }]}
-          onPress={handleSave}
-          disabled={saving}
-        >
-          <Text style={styles.btnText}>
-            {saving ? "Saving..." : "Save Changes"}
+    <ImageBackground
+      source={require("../../../assets/images/bg-pattern.jpeg")}
+      resizeMode="cover"
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView style={{ flex: 1 }}>
+        <View style={styles.container}>
+          <Text style={styles.title}>Edit Newsletter</Text>
+          <Text style={styles.subtitle}>
+            Update your newsletter details
           </Text>
-        </Pressable>
-      </View>
-    </SafeAreaView>
+
+          <TextInput
+            style={styles.input}
+            value={title}
+            onChangeText={setTitle}
+            placeholder="Title"
+            placeholderTextColor="#888"
+          />
+
+          <TextInput
+            style={[styles.input, { height: 120 }]}
+            value={description}
+            onChangeText={setDescription}
+            multiline
+            placeholder="Description"
+            placeholderTextColor="#888"
+          />
+
+          <View style={styles.row}>
+            <TextInput
+              style={[styles.input, styles.smallInput]}
+              value={month}
+              onChangeText={setMonth}
+              placeholder="MM"
+              placeholderTextColor="#888"
+              keyboardType="numeric"
+            />
+
+            <TextInput
+              style={[styles.input, styles.smallInput]}
+              value={year}
+              onChangeText={setYear}
+              placeholder="YYYY"
+              placeholderTextColor="#888"
+              keyboardType="numeric"
+            />
+          </View>
+
+          <Pressable style={styles.btn} onPress={handleSave}>
+            {saving ? (
+              <ActivityIndicator color="#000" />
+            ) : (
+              <Text style={styles.btnText}>Save Changes</Text>
+            )}
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: "#000",
-  },
   loader: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
   },
+
   container: {
+    flex: 1,
     padding: 24,
+    justifyContent: "center",
   },
+
   title: {
-    color: "#fff",
-    fontSize: 26,
-    fontWeight: "700",
-    marginBottom: 20,
+    fontSize: 32,
+    fontWeight: "800",
+    color: "#000",
+    marginBottom: 6,
   },
+
+  subtitle: {
+    color: "#555",
+    marginBottom: 26,
+  },
+
   input: {
-    backgroundColor: "rgba(255,255,255,0.08)",
+    backgroundColor: "#ffffffcc",
     borderRadius: 14,
-    padding: 14,
-    color: "#fff",
-    marginBottom: 14,
+    padding: 16,
+    marginBottom: 16,
+    fontSize: 15,
   },
-  textarea: {
-    height: 110,
-    textAlignVertical: "top",
-  },
+
   row: {
     flexDirection: "row",
     gap: 12,
   },
+
   smallInput: {
     flex: 1,
   },
+
   btn: {
-    backgroundColor: "#fff",
-    padding: 15,
-    borderRadius: 14,
-    marginTop: 22,
+    backgroundColor: "#FFD700",
+    padding: 18,
+    borderRadius: 16,
+    alignItems: "center",
+    marginTop: 10,
   },
+
   btnText: {
     color: "#000",
     fontWeight: "700",
-    textAlign: "center",
     fontSize: 16,
   },
 });

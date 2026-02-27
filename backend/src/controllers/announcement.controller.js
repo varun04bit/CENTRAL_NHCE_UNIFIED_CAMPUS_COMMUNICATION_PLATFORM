@@ -51,7 +51,7 @@ exports.createAnnouncement = async (req, res) => {
       });
     }
 
-    await handleAnnouncementPush(announcement.id);
+    //await handleAnnouncementPush(announcement.id);
 
     return res.status(201).json({
       message: "Announcement created successfully",

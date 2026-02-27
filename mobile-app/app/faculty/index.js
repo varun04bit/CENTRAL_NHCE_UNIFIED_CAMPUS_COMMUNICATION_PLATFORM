@@ -1,110 +1,130 @@
-import { View, Text, StyleSheet, Pressable, Alert } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  Alert,
+  ImageBackground,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useState } from "react";
+
+import ProfileAvatar from "../../components/ui/ProfileAvatar";
+import ProfileSheet from "../../components/ui/ProfileSheet";
 
 export default function FacultyHome() {
   const router = useRouter();
+  const [profileOpen, setProfileOpen] = useState(false);
 
-  /* ✅ LOGOUT FUNCTION */
-  const handleLogout = () => {
-    Alert.alert("Logout", "Are you sure you want to logout?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Logout",
-        style: "destructive",
-        onPress: async () => {
-          await AsyncStorage.removeItem("token");
-          router.replace("/login");
-        },
-      },
-    ]);
+  const handleLogout = async () => {
+    await AsyncStorage.removeItem("token");
+    setProfileOpen(false);
+    router.replace("/login");
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.container}>
-        
-        {/* HEADER */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.title}>Faculty Panel</Text>
-            <Text style={styles.subtitle}>
-              Create and manage your announcements & newsletters
-            </Text>
+    <ImageBackground
+      source={require("../../assets/images/bg-pattern.jpeg")}
+      resizeMode="cover"
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.container}>
+
+          {/* HEADER */}
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.title}>Faculty Panel</Text>
+              <Text style={styles.subtitle}>
+                Create and manage announcements & newsletters
+              </Text>
+            </View>
+
+            {/* PROFILE ICON */}
+            <Pressable onPress={() => setProfileOpen(true)}>
+              <ProfileAvatar size={40} />
+            </Pressable>
           </View>
 
-          {/* ✅ LOGOUT ICON */}
-          <Pressable onPress={handleLogout}>
-            <Ionicons name="log-out-outline" size={28} color="#FF6B6B" />
-          </Pressable>
+          {/* CREATE */}
+          <Section title="Create">
+            <Card
+              icon="megaphone-outline"
+              text="Create Announcement"
+              onPress={() => router.push("/faculty/create-announcement")}
+            />
+            <Card
+              icon="newspaper-outline"
+              text="Create Newsletter"
+              onPress={() => router.push("/faculty/create-newsletter")}
+            />
+          </Section>
+
+          {/* MANAGE */}
+          <Section title="Manage">
+            <Card
+              icon="list-outline"
+              text="My Announcements"
+              onPress={() => router.push("/faculty/announcements")}
+            />
+            <Card
+              icon="albums-outline"
+              text="My Newsletters"
+              onPress={() => router.push("/faculty/newsletters")}
+            />
+          </Section>
+
+          {/* ACCOUNT */}
+          <Section title="Account">
+            <Card
+              icon="person-outline"
+              text="My Profile"
+              onPress={() => router.push("/faculty/profile")}
+            />
+          </Section>
+
         </View>
 
-        {/* CREATE SECTION */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Create</Text>
-
-          <Pressable
-            style={styles.card}
-            onPress={() => router.push("/faculty/create-announcement")}
-          >
-            <Ionicons name="megaphone-outline" size={22} color="#fff" />
-            <Text style={styles.cardText}>Create Announcement</Text>
-          </Pressable>
-
-          <Pressable
-            style={styles.card}
-            onPress={() => router.push("/faculty/create-newsletter")}
-          >
-            <Ionicons name="newspaper-outline" size={22} color="#fff" />
-            <Text style={styles.cardText}>Create Newsletter</Text>
-          </Pressable>
-        </View>
-
-        {/* MANAGE SECTION */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Manage</Text>
-
-          <Pressable
-            style={styles.card}
-            onPress={() => router.push("/faculty/announcements")}
-          >
-            <Ionicons name="list-outline" size={22} color="#fff" />
-            <Text style={styles.cardText}>My Announcements</Text>
-          </Pressable>
-
-          <Pressable
-            style={styles.card}
-            onPress={() => router.push("/faculty/newsletters")}
-          >
-            <Ionicons name="albums-outline" size={22} color="#fff" />
-            <Text style={styles.cardText}>My Newsletters</Text>
-          </Pressable>
-        </View>
-
-        {/* PROFILE */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
-
-          <Pressable
-            style={styles.card}
-            onPress={() => router.push("/faculty/profile")}
-          >
-            <Ionicons name="person-outline" size={22} color="#fff" />
-            <Text style={styles.cardText}>My Profile</Text>
-          </Pressable>
-        </View>
-
-      </View>
-    </SafeAreaView>
+        {/* PROFILE SHEET */}
+        <ProfileSheet
+          visible={profileOpen}
+          onClose={() => setProfileOpen(false)}
+          email={"faculty@email.com"} // later from backend
+          onLogout={handleLogout}
+        />
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
+
+/* ---------- REUSABLE ---------- */
+
+function Section({ title, children }) {
+  return (
+    <View style={{ marginBottom: 26 }}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      {children}
+    </View>
+  );
+}
+
+function Card({ icon, text, onPress }) {
+  return (
+    <Pressable style={styles.card} onPress={onPress}>
+      <Ionicons name={icon} size={22} color="#FFD700" />
+      <Text style={styles.cardText}>{text}</Text>
+    </Pressable>
+  );
+}
+
+/* ---------- STYLES ---------- */
 
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#000",
   },
 
   container: {
@@ -113,7 +133,7 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    marginTop: 40,
+    marginTop: 20,
     marginBottom: 28,
     flexDirection: "row",
     justifyContent: "space-between",
@@ -121,24 +141,20 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: "800",
-    color: "#fff",
+    color: "#000",
   },
 
   subtitle: {
-    marginTop: 6,
-    fontSize: 16,
-    color: "rgba(255,255,255,0.65)",
+    marginTop: 4,
+    fontSize: 15,
+    color: "#444",
     maxWidth: 260,
   },
 
-  section: {
-    marginBottom: 26,
-  },
-
   sectionTitle: {
-    color: "#aaa",
+    color: "#555",
     fontSize: 13,
     marginBottom: 10,
     letterSpacing: 0.6,
@@ -146,19 +162,19 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: "#ffffffcc",
     borderRadius: 18,
-    padding: 20,
+    padding: 18,
     marginBottom: 14,
     flexDirection: "row",
     alignItems: "center",
     gap: 14,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.08)",
+    borderColor: "#e5e7eb",
   },
 
   cardText: {
-    color: "#fff",
+    color: "#000",
     fontSize: 16,
     fontWeight: "600",
   },
