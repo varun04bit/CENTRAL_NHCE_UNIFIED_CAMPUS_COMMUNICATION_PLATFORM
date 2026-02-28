@@ -7,6 +7,7 @@ import {
   Pressable,
   ActivityIndicator,
   ImageBackground,
+  BackHandler,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -27,6 +28,24 @@ export default function StudentDashboard() {
 
   useEffect(() => {
     fetchAnnouncements();
+  }, []);
+
+  // ✅ BLOCK ANDROID BACK BUTTON
+  useEffect(() => {
+    const backAction = () => {
+      Alert.alert("Exit App", "Are you sure you want to exit?", [
+        { text: "Cancel", style: "cancel" },
+        { text: "YES", onPress: () => BackHandler.exitApp() },
+      ]);
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove();
   }, []);
 
   const fetchAnnouncements = async () => {
@@ -51,7 +70,7 @@ export default function StudentDashboard() {
   const handleLogout = async () => {
     await AsyncStorage.removeItem("token");
     setProfileOpen(false);
-    router.replace("/login");
+    router.replace("/login"); // ✅ already correct
   };
 
   return (

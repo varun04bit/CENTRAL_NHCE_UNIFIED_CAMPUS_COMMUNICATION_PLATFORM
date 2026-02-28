@@ -5,42 +5,59 @@ import {
   Pressable,
   Image,
   Linking,
+  Modal,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useState } from "react";
 
 export default function AnnouncementCard({ item }) {
+  const [preview, setPreview] = useState(false);
 
   const openAttachment = () => {
-    if (item.fileUrl || item.image) {
-      Linking.openURL(item.fileUrl || item.image);
-    }
+    if (item.fileUrl) Linking.openURL(item.fileUrl);
+    else if (item.image) setPreview(true);
   };
 
   return (
-    <Pressable style={styles.card} onPress={openAttachment}>
+    <>
+      <Pressable style={styles.card} onPress={openAttachment}>
 
-      <View style={styles.badgeRow}>
-        <Text style={styles.title}>{item.title}</Text>
-        <Ionicons name="chevron-forward" size={20} color="#94A3B8" style={{ marginLeft: "auto" }} />
-      </View>
+        <View style={styles.badgeRow}>
+          <Text style={styles.title}>{item.title}</Text>
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color="#94A3B8"
+            style={{ marginLeft: "auto" }}
+          />
+        </View>
 
-      {item.image && (
-        <Image
-          source={{ uri: item.image }}
-          style={styles.image}
-          resizeMode="cover"
-          onError={() => console.log("Image failed:", item.image)}
-        />
-      )}
+        {item.image && (
+          <Pressable onPress={() => setPreview(true)}>
+            <Image
+              source={{ uri: item.image }}
+              style={styles.image}
+              resizeMode="cover"
+            />
+          </Pressable>
+        )}
 
-      <Text style={styles.desc}>{item.description}</Text>
+        <Text style={styles.desc}>{item.description}</Text>
 
-      <View style={styles.footer}>
-        <Text style={styles.date}>📅 {item.date}</Text>
-        <Text style={styles.time}>{item.timeAgo}</Text>
-      </View>
+        <View style={styles.footer}>
+          <Text style={styles.date}>📅 {item.date}</Text>
+          <Text style={styles.time}>{item.timeAgo}</Text>
+        </View>
 
-    </Pressable>
+      </Pressable>
+
+      {/* IMAGE PREVIEW MODAL */}
+      <Modal visible={preview} transparent>
+        <Pressable style={styles.modal} onPress={() => setPreview(false)}>
+          <Image source={{ uri: item.image }} style={styles.fullImage} />
+        </Pressable>
+      </Modal>
+    </>
   );
 }
 
@@ -65,6 +82,19 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     marginBottom: 10,
     backgroundColor: "#ddd",
+  },
+
+  fullImage: {
+    width: "100%",
+    height: "70%",
+    resizeMode: "contain",
+  },
+
+  modal: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.9)",
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   badgeRow: {

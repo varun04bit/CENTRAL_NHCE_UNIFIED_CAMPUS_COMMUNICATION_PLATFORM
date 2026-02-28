@@ -69,7 +69,7 @@ export default function Login() {
   return (
     <ImageBackground
       source={require("../../assets/images/bg-pattern.jpeg")}
-      resizeMode="cover"   // use "repeat" if pattern tile
+      resizeMode="cover"
       style={{ flex: 1 }}
     >
       <SafeAreaView style={styles.safe}>
@@ -127,6 +127,16 @@ export default function Login() {
               ) : (
                 <Text style={styles.loginText}>LOGIN</Text>
               )}
+            </Pressable>
+
+            {/* ALUMNI BUTTON */}
+            <Pressable
+              style={styles.alumniBtn}
+              onPress={() => router.replace("/alumni")}
+            >
+              <Text style={styles.alumniText}>
+                Continue as Alumni →
+              </Text>
             </Pressable>
 
             <Link href="/signup">
@@ -195,6 +205,22 @@ const styles = StyleSheet.create({
     color: "#000",
     fontWeight: "700",
     fontSize: 16,
+  },
+
+  alumniBtn: {
+    marginTop: 12,
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#FFD700",
+    alignItems: "center",
+    backgroundColor: "#fffbe6",
+  },
+
+  alumniText: {
+    color: "#000",
+    fontWeight: "600",
+    fontSize: 15,
   },
 
   footer: {

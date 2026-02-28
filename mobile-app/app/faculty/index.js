@@ -5,12 +5,13 @@ import {
   Pressable,
   Alert,
   ImageBackground,
+  BackHandler,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import ProfileAvatar from "../../components/ui/ProfileAvatar";
 import ProfileSheet from "../../components/ui/ProfileSheet";
@@ -18,6 +19,24 @@ import ProfileSheet from "../../components/ui/ProfileSheet";
 export default function FacultyHome() {
   const router = useRouter();
   const [profileOpen, setProfileOpen] = useState(false);
+
+  // ✅ BLOCK BACK BUTTON
+  useEffect(() => {
+    const backAction = () => {
+      Alert.alert("Exit App", "Are you sure you want to exit?", [
+        { text: "Cancel", style: "cancel" },
+        { text: "YES", onPress: () => BackHandler.exitApp() },
+      ]);
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, []);
 
   const handleLogout = async () => {
     await AsyncStorage.removeItem("token");
@@ -43,7 +62,6 @@ export default function FacultyHome() {
               </Text>
             </View>
 
-            {/* PROFILE ICON */}
             <Pressable onPress={() => setProfileOpen(true)}>
               <ProfileAvatar size={40} />
             </Pressable>
@@ -88,11 +106,10 @@ export default function FacultyHome() {
 
         </View>
 
-        {/* PROFILE SHEET */}
         <ProfileSheet
           visible={profileOpen}
           onClose={() => setProfileOpen(false)}
-          email={"faculty@email.com"} // later from backend
+          email={"faculty@email.com"}
           onLogout={handleLogout}
         />
       </SafeAreaView>
@@ -123,9 +140,7 @@ function Card({ icon, text, onPress }) {
 /* ---------- STYLES ---------- */
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-  },
+  safe: { flex: 1 },
 
   container: {
     flex: 1,
