@@ -83,8 +83,16 @@ export default function MyAnnouncements() {
           data={data}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
           ListHeaderComponent={
-            <Text style={styles.title}>My Announcements</Text>
+            <>
+              {/* BACK BUTTON */}
+              <Pressable onPress={() => router.back()} style={styles.backButton}>
+                <Text style={styles.backText}>← Back</Text>
+              </Pressable>
+
+              <Text style={styles.title}>My Announcements</Text>
+            </>
           }
           ListEmptyComponent={
             <Text style={styles.empty}>No announcements yet</Text>
@@ -133,9 +141,7 @@ export default function MyAnnouncements() {
 
               {/* ACTIONS */}
               <View style={styles.row}>
-                <Text style={styles.meta}>
-                  Priority: {item.priority}
-                </Text>
+                <Text style={styles.meta}>Priority: {item.priority}</Text>
 
                 <View style={styles.actions}>
                   <Pressable
@@ -143,11 +149,19 @@ export default function MyAnnouncements() {
                       router.push(`/faculty/edit-announcement/${item.id}`)
                     }
                   >
-                    <Ionicons name="pencil-outline" size={20} color="#FFD700" />
+                    <Ionicons
+                      name="pencil-outline"
+                      size={20}
+                      color="#FFD700"
+                    />
                   </Pressable>
 
                   <Pressable onPress={() => handleDelete(item.id)}>
-                    <Ionicons name="trash-outline" size={20} color="#FF4D4D" />
+                    <Ionicons
+                      name="trash-outline"
+                      size={20}
+                      color="#FF4D4D"
+                    />
                   </Pressable>
                 </View>
               </View>
@@ -169,6 +183,17 @@ const styles = StyleSheet.create({
   },
 
   list: { padding: 20 },
+
+  backButton: {
+    marginBottom: 10,
+    alignSelf: "flex-start",
+  },
+
+  backText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#000",
+  },
 
   title: {
     fontSize: 30,

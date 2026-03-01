@@ -1,3 +1,25 @@
+# ===============================
+# Root-level ignores only
+# ===============================
+
+# IDE / Editor
 .idea/
-admin-frontend/
-mobile-app/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs (root-level, if any)
+*.log
+
+# Environment files at root (if any)
+.env
+.env.*
+
+# Node artifacts at root (only if you run npm here)
+node_modules/
+
+# Temporary / cache
+.cache/
+.tmp/

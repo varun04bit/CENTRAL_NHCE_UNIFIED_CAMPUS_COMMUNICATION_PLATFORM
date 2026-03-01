@@ -62,8 +62,16 @@ export default function MyNewsletters() {
           data={data}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
           ListHeaderComponent={
-            <Text style={styles.title}>My Newsletters</Text>
+            <>
+              {/* BACK BUTTON */}
+              <Pressable onPress={() => router.back()} style={styles.backButton}>
+                <Text style={styles.backText}>← Back</Text>
+              </Pressable>
+
+              <Text style={styles.title}>My Newsletters</Text>
+            </>
           }
           ListEmptyComponent={
             <Text style={styles.empty}>No newsletters created yet</Text>
@@ -140,6 +148,17 @@ const styles = StyleSheet.create({
   },
 
   list: { padding: 20 },
+
+  backButton: {
+    marginBottom: 10,
+    alignSelf: "flex-start",
+  },
+
+  backText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#000",
+  },
 
   title: {
     fontSize: 30,

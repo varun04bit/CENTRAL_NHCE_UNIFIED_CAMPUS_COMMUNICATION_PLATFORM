@@ -95,15 +95,6 @@ export default function FacultyHome() {
             />
           </Section>
 
-          {/* ACCOUNT */}
-          <Section title="Account">
-            <Card
-              icon="person-outline"
-              text="My Profile"
-              onPress={() => router.push("/faculty/profile")}
-            />
-          </Section>
-
         </View>
 
         <ProfileSheet

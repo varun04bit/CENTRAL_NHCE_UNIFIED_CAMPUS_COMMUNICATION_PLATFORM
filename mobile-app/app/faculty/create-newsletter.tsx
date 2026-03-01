@@ -12,10 +12,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState } from "react";
 import * as DocumentPicker from "expo-document-picker";
+import { useNavigation } from "@react-navigation/native";
+
 import { uploadFiles } from "../../services/upload.service";
 import { createNewsletter } from "../../services/newsletter.service";
 
 export default function CreateNewsletter() {
+  const navigation = useNavigation();
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [month, setMonth] = useState("");
@@ -77,7 +81,12 @@ export default function CreateNewsletter() {
     >
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-          
+
+          {/* BACK BUTTON */}
+          <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Text style={styles.backText}>← Back</Text>
+          </Pressable>
+
           <Text style={styles.heading}>Create Newsletter</Text>
           <Text style={styles.subheading}>
             Share monthly updates with students
@@ -122,17 +131,16 @@ export default function CreateNewsletter() {
             <Text style={{ fontWeight: "600" }}>Select Files</Text>
           </Pressable>
 
-          {files.length > 0 &&
-            files.map((file, i) => (
-              <Pressable
-                key={i}
-                onPress={() => setFiles(files.filter((_, j) => j !== i))}
-                style={styles.fileItem}
-              >
-                <Text>📎 {file.name}</Text>
-                <Text style={{ color: "#ef4444" }}>Remove</Text>
-              </Pressable>
-            ))}
+          {files.map((file, i) => (
+            <Pressable
+              key={i}
+              onPress={() => setFiles(files.filter((_, j) => j !== i))}
+              style={styles.fileItem}
+            >
+              <Text>📎 {file.name}</Text>
+              <Text style={{ color: "#ef4444" }}>Remove</Text>
+            </Pressable>
+          ))}
 
           <Pressable style={styles.submit} onPress={handleSubmit}>
             {loading ? (
@@ -152,6 +160,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
+  },
+
+  backButton: {
+    marginBottom: 12,
+    alignSelf: "flex-start",
+  },
+
+  backText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#000",
   },
 
   heading: {
