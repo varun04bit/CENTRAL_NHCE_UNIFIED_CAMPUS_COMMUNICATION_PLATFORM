@@ -1,6 +1,8 @@
 import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
 import { View } from "react-native";
+import { useEffect, useState } from "react";
+import AnimatedSplash from "./splash";
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -10,20 +12,24 @@ export default function RootLayout() {
     "Inter-SemiBoldItalic": require("../assets/fonts/Inter-SemiBoldItalic.ttf"),
   });
 
-  // Prevent splash / white screen while fonts load
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    if (fontsLoaded) {
+      const timer = setTimeout(() => {
+        setShowSplash(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [fontsLoaded]);
+
   if (!fontsLoaded) {
-    return <View style={{ flex: 1, backgroundColor: "#000" }} />;
+    return <View style={{ flex: 1, backgroundColor: "#ffffff" }} />;
   }
 
-  return (
-    <Stack screenOptions={{ headerShown: false }}>
-      {/* Auth screens */}
-      <Stack.Screen name="(auth)/login" />
-      <Stack.Screen name="(auth)/signup" />
+  if (showSplash) {
+    return <AnimatedSplash />;
+  }
 
-      {/* Main app (tabs) */}
-      <Stack.Screen name="(tabs)" />
-    </Stack>
-  );
+  return <Stack screenOptions={{ headerShown: false }} />;
 }
-
