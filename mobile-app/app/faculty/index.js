@@ -16,11 +16,36 @@ import { useState, useEffect } from "react";
 import ProfileAvatar from "../../components/ui/ProfileAvatar";
 import ProfileSheet from "../../components/ui/ProfileSheet";
 
+const BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL;
+
 export default function FacultyHome() {
   const router = useRouter();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [email, setEmail] = useState("");
 
-  // ✅ BLOCK BACK BUTTON
+  // ✅ FETCH USER EMAIL
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = await AsyncStorage.getItem("token");
+
+        const res = await fetch(`${BASE_URL}/users/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const json = await res.json();
+        setEmail(json.email);
+      } catch (err) {
+        console.error("Fetch profile error:", err);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  // ✅ BLOCK BACK BUTTON (EXIT APP)
   useEffect(() => {
     const backAction = () => {
       Alert.alert("Exit App", "Are you sure you want to exit?", [
@@ -100,7 +125,7 @@ export default function FacultyHome() {
         <ProfileSheet
           visible={profileOpen}
           onClose={() => setProfileOpen(false)}
-          email={"faculty@email.com"}
+          email={email || "Loading..."}
           onLogout={handleLogout}
         />
       </SafeAreaView>

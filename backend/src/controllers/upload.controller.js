@@ -21,7 +21,7 @@ const uploadFile = async (req, res) => {
 
 const savedFiles = await Promise.all(
   req.files.map(file =>
-    saveUploadedFile(file, process.env.BASE_URL)
+    saveUploadedFile(file)
   )
 );
 

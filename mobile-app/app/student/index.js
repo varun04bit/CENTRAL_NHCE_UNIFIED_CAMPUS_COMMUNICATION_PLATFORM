@@ -25,12 +25,34 @@ export default function StudentDashboard() {
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [email, setEmail] = useState("");
 
+  // ✅ FETCH STUDENT EMAIL
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = await AsyncStorage.getItem("token");
+
+        const res = await fetch(`${API_BASE_URL}/users/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const json = await res.json();
+        setEmail(json.email);
+      } catch (err) {
+        console.error("Fetch profile error:", err);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  // ✅ FETCH ANNOUNCEMENTS
   useEffect(() => {
     fetchAnnouncements();
   }, []);
 
-  // ✅ BLOCK ANDROID BACK BUTTON
+  // ✅ BLOCK ANDROID BACK BUTTON (EXIT APP)
   useEffect(() => {
     const backAction = () => {
       Alert.alert("Exit App", "Are you sure you want to exit?", [
@@ -70,7 +92,7 @@ export default function StudentDashboard() {
   const handleLogout = async () => {
     await AsyncStorage.removeItem("token");
     setProfileOpen(false);
-    router.replace("/login"); // ✅ already correct
+    router.replace("/login");
   };
 
   return (
@@ -108,7 +130,11 @@ export default function StudentDashboard() {
 
         {/* CONTENT */}
         {loading ? (
-          <ActivityIndicator size="large" color="#FFD700" style={{ marginTop: 40 }} />
+          <ActivityIndicator
+            size="large"
+            color="#FFD700"
+            style={{ marginTop: 40 }}
+          />
         ) : announcements.length === 0 ? (
           <Text style={styles.empty}>No announcements available</Text>
         ) : (
@@ -142,7 +168,7 @@ export default function StudentDashboard() {
         <ProfileSheet
           visible={profileOpen}
           onClose={() => setProfileOpen(false)}
-          email={"student@email.com"}
+          email={email || "Loading..."}
           onLogout={handleLogout}
         />
       </SafeAreaView>
