@@ -105,3 +105,42 @@ exports.getNewsletters = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+/**
+ * FACULTY: UPDATE NEWSLETTER
+ * PUT /newsletters/:id
+ */
+exports.updateNewsletter = async (req, res) => {
+  try {
+    const facultyId = req.user.id;
+    const { id } = req.params;
+    const { title, description, month, year } = req.body;
+
+    const existing = await prisma.newsletter.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      return res.status(404).json({ message: "Newsletter not found" });
+    }
+
+    if (existing.createdById !== facultyId) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    const updated = await prisma.newsletter.update({
+      where: { id },
+      data: {
+        ...(title !== undefined ? { title } : {}),
+        ...(description !== undefined ? { description } : {}),
+        ...(month !== undefined ? { month: Number(month) } : {}),
+        ...(year !== undefined ? { year: Number(year) } : {}),
+      },
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error("Update newsletter error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

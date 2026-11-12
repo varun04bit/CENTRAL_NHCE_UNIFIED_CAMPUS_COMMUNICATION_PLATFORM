@@ -143,24 +143,28 @@ export default function StudentDashboard() {
             keyExtractor={(item) => item.id.toString()}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 120 }}
-            renderItem={({ item }) => (
-              <AnnouncementCard
-                item={{
-                  ...item,
-                  image: item.image
-                    ? item.image.startsWith("http")
-                      ? item.image
-                      : `${API_BASE_URL}/${item.image}`
-                    : null,
-                  fileUrl: item.fileUrl
-                    ? item.fileUrl.startsWith("http")
-                      ? item.fileUrl
-                      : `${API_BASE_URL}/${item.fileUrl}`
-                    : null,
-                  timeAgo: new Date(item.createdAt).toLocaleDateString(),
-                }}
-              />
-            )}
+            renderItem={({ item }) => {
+              const imageFile = item.files?.find((f) =>
+                f.mimeType?.startsWith("image/")
+              );
+              const docFile = item.files?.find(
+                (f) => !f.mimeType?.startsWith("image/")
+              );
+              const resolveUrl = (u) =>
+                u ? (u.startsWith("http") ? u : `${API_BASE_URL}/${u}`) : null;
+
+              return (
+                <AnnouncementCard
+                  item={{
+                    ...item,
+                    image: resolveUrl(item.image || imageFile?.url),
+                    fileUrl: resolveUrl(item.fileUrl || docFile?.url),
+                    date: item.priority || "INFO",
+                    timeAgo: new Date(item.createdAt).toLocaleDateString(),
+                  }}
+                />
+              );
+            }}
           />
         )}
 

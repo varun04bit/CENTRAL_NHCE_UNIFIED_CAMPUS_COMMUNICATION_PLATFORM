@@ -6,7 +6,8 @@
     "postinstall": "prisma generate",
     "db:test": "node src/test/db.test.js",
     "db:seed": "node prisma/seed.js",
-    "seed:admin": "node prisma/seedAdmin.js"
+    "seed:admin": "node prisma/seedAdmin.js",
+    "seed:demo": "node prisma/seedDemo.js"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.3.0",

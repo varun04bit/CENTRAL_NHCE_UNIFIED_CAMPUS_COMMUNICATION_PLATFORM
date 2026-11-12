@@ -8,8 +8,8 @@ export default function CreateFaculty() {
   const router = useRouter();
   const token = getToken();
 
-  const [programs, setPrograms] = useState([]);
-  const [departments, setDepartments] = useState([]);
+  const [programs, setPrograms] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<any[]>([]);
 
   const [form, setForm] = useState({
     name: "",
@@ -29,8 +29,13 @@ export default function CreateFaculty() {
   }
 
   async function handleProgramChange(programId: string) {
+    setForm((prev) => ({ ...prev, departmentId: "" }));
+    if (!programId) {
+      setDepartments([]);
+      return;
+    }
     const data = await getDepartments(programId);
-    setDepartments(data);
+    setDepartments(Array.isArray(data) ? data : []);
   }
 
   async function handleSubmit(e: any) {
@@ -70,7 +75,7 @@ export default function CreateFaculty() {
             className="input"
             onChange={(e) => handleProgramChange(e.target.value)}
           >
-            <option>Select Program</option>
+            <option value="">Select Program</option>
             {programs.map((p: any) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
@@ -78,11 +83,12 @@ export default function CreateFaculty() {
 
           <select
             className="input"
+            value={form.departmentId}
             onChange={(e) =>
               setForm({ ...form, departmentId: e.target.value })
             }
           >
-            <option>Select Department</option>
+            <option value="">Select Department</option>
             {departments.map((d: any) => (
               <option key={d.id} value={d.id}>{d.name}</option>
             ))}

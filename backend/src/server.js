@@ -3,7 +3,7 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
-// const path = require("path");
+const path = require("path");
 
 const authRoutes = require("./routes/auth.routes");
 const studentAuthRoutes = require("./routes/studentAuth.routes");
@@ -11,6 +11,7 @@ const facultyAuthRoutes = require("./routes/facultyAuth.routes");
 const adminAuthRoutes = require("./routes/adminAuth.routes");
 const adminRoutes = require("./routes/admin.routes");
 const announcementRoutes = require("./routes/announcement.routes");
+const announcementAIRoutes = require("./routes/announcementAI.routes");
 const metaRoutes = require("./routes/meta.routes");
 const uploadRoutes = require("./routes/upload.routes");
 const newsletterRoutes = require("./routes/newsletter.routes");
@@ -57,13 +58,14 @@ app.get("/", (req, res) => {
   res.status(200).send("Announcement API is running 🚀");
 });
 
-// app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use("/auth", authRoutes); //facult or student login
 app.use("/auth/student", studentAuthRoutes); //student signup
 app.use("/auth/faculty", facultyAuthRoutes); // to update the password
 app.use("/auth/admin", adminAuthRoutes); // admin login
 app.use("/admin", adminRoutes); //to create the faculty
 app.use("/announcements", announcementRoutes); // announcement functions
+app.use("/announcements", announcementAIRoutes); // AI draft generation
 app.use("/meta", metaRoutes); // import the department and program
 app.use("/api",uploadRoutes); // to upload the media 
 app.use("/", newsletterRoutes);

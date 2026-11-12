@@ -5,7 +5,6 @@ const adminOnly = require("../middleware/adminOnly");
 
 const router = express.Router();
 
-// router.post("/faculty", authMiddleware("ADMIN"), createFaculty);
-router.post("/faculty", authMiddleware, adminOnly, createFaculty);
+router.post("/faculty", authMiddleware("ADMIN"), adminOnly, createFaculty);
 
 module.exports = router;

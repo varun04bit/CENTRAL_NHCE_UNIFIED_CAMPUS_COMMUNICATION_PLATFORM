@@ -4,6 +4,7 @@ const {
   createNewsletter,
   getNewsletters,
   getMyNewsletters,
+  updateNewsletter,
 } = require("../controllers/newsletter.controller");
 
 const router = express.Router();
@@ -24,6 +25,13 @@ router.get(
   "/newsletters/mine",
   authMiddleware("FACULTY"),
   getMyNewsletters
+);
+
+// Faculty: update own newsletter
+router.put(
+  "/newsletters/:id",
+  authMiddleware("FACULTY"),
+  updateNewsletter
 );
 
 // ============================

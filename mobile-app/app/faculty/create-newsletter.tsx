@@ -12,13 +12,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState } from "react";
 import * as DocumentPicker from "expo-document-picker";
-import { useNavigation } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 
 import { uploadFiles } from "../../services/upload.service";
 import { createNewsletter } from "../../services/newsletter.service";
 
 export default function CreateNewsletter() {
-  const navigation = useNavigation();
+  const router = useRouter();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -83,7 +83,7 @@ export default function CreateNewsletter() {
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
 
           {/* BACK BUTTON */}
-          <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Pressable onPress={() => router.back()} style={styles.backButton}>
             <Text style={styles.backText}>← Back</Text>
           </Pressable>
 
